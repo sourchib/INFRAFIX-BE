@@ -1,0 +1,13 @@
+package com.infrafix.citizen_reporting;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class Infrafix {
+
+	public static void main(String[] args) {
+		SpringApplication.run(Infrafix.class, args);
+	}
+
+}
