@@ -50,7 +50,7 @@ public class User {
     private LocalDateTime modifiedDate;
 
     // Relation Many to One (Role)
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "RoleID")
     private Role role;
 

@@ -8,12 +8,21 @@ import java.util.List;
 @Entity
 @Table(name = "roles")
 public class Role {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(unique = true, nullable = false)
     private String role;
+
+    // Default constructor
+    public Role() {}
+
+    // Constructor to set id
+    public Role(Long id) {
+        this.id = id;
+    }
 
 
     // Relation One to Many (User)

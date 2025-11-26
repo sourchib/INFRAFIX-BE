@@ -42,5 +42,8 @@ public class GlobalResponse {
         return new ResponseHandler().handleResponse("DATA NOT FOUND", HttpStatus.NOT_FOUND, null, errorCode, request);
     }
 
+    public static ResponseEntity<Object> notAdmin (String errorCode, HttpServletRequest request){
+        return new ResponseHandler().handleResponse("NOT AN ADMIN",  HttpStatus.UNAUTHORIZED, null, errorCode, request);
+    }
 
 }

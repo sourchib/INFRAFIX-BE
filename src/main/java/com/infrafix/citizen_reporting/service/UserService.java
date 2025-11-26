@@ -2,21 +2,24 @@ package com.infrafix.citizen_reporting.service;
 
 import com.infrafix.citizen_reporting.core.IService;
 import com.infrafix.citizen_reporting.dto.UserResponseDTO;
+import com.infrafix.citizen_reporting.model.Role;
 import com.infrafix.citizen_reporting.model.User;
+import com.infrafix.citizen_reporting.repo.RoleRepository;
 import com.infrafix.citizen_reporting.repo.UserRepository;
+import com.infrafix.citizen_reporting.security.BcryptCustom;
 import com.infrafix.citizen_reporting.util.GlobalResponse;
 import com.infrafix.citizen_reporting.util.LoggingFile;
 import com.infrafix.citizen_reporting.util.RequestCapture;
+import com.infrafix.citizen_reporting.util.TransformPagination;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-//import org.thymeleaf.spring6.SpringTemplateEngine;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -33,10 +36,13 @@ public class UserService implements IService<User> {
     private UserRepository userRepository;
 
     @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
     private TransformPagination tp;
 
-    private ModelMapper modelMapper = new ModelMapper();
-    private StringBuilder sBuild =  new StringBuilder();
+    @Autowired
+    private BcryptCustom bcryptCustom;
 
 
     private static final String className = "UserService";
@@ -46,14 +52,37 @@ public class UserService implements IService<User> {
         if(user == null){
             return GlobalResponse.dataCreationFailed("IFUSFV001", request);
         }
-        try{
+
+        try {
+            // Hash Password
+            String hashedPassword = bcryptCustom.hash(user.getPassword());
+            user.setPassword(hashedPassword);
+
+            // Check if Role exist on DB
+            if (user.getRole() == null) {
+                Role citizenRole = roleRepository.findById(1L)
+                        .orElseThrow(() -> new RuntimeException("Role with ID 1 (citizen) not found"));
+                user.setRole(citizenRole);
+            } else {
+                // Optional: Overwrite Role ID if Provided
+                Long roleId = user.getRole().getId();
+                Role existingRole = roleRepository.findById(roleId)
+                        .orElseThrow(() -> new RuntimeException("Role with ID " + roleId + " not found"));
+                user.setRole(existingRole);
+            }
+
+            // Save User
             userRepository.save(user);
+
         } catch (Exception e){
-            LoggingFile.logException(className,"save (User user, HttpServletRequest request) " + RequestCapture.allRequest(request),e);
+            LoggingFile.logException(className,"save(User user, HttpServletRequest request) "
+                    + RequestCapture.allRequest(request), e);
             return GlobalResponse.dataCreationFailed("IFUSFE001", request);
         }
+
         return GlobalResponse.dataCreation(request);
     }
+
 
     @Override
     public ResponseEntity<Object> update(Long id, User user, HttpServletRequest request){
@@ -94,7 +123,7 @@ public class UserService implements IService<User> {
         } catch (Exception e){
             LoggingFile.logException(className,"delete(Long id, HttpServletRequest request) " + RequestCapture.allRequest(request), e);
             return GlobalResponse.dataNotFound("IFUSFV041", request);
-            }
+        }
         return GlobalResponse.dataDeletion(request);
     }
 
@@ -131,23 +160,75 @@ public class UserService implements IService<User> {
                 return GlobalResponse.dataNotFound("IFUSFV041", request);
             }
             listDTO = entityToDTO(page.getContent());
-            data =
+            data = tp.transformPagination(listDTO, page, "id", "");
+        } catch (Exception e){
+            LoggingFile.logException(className,"findAll(Pageable pageable, HttpServletRequest request) " + RequestCapture.allRequest(request), e);
+            return GlobalResponse.errorOccurred("IFUSFE041", request);
         }
+        return GlobalResponse.dataFound(data, request);
     }
 
     @Override
     public ResponseEntity<Object> findByParam (Pageable pageable, String column, String value, HttpServletRequest request){
-
+        Page<User> page = null;
+        List<UserResponseDTO> listDTO = null;
+        Page<UserResponseDTO> pageRespo = null;
+        Map<String, Object> data = null;
+        try{
+            switch(column){
+                case "name": page = userRepository.findByNameContainsIgnoreCase(pageable, value); break;
+                case "email": page = userRepository.findByEmailContainsIgnoreCase(pageable, value); break;
+                case "address": page = userRepository.findByAddressContainsIgnoreCase(pageable, value); break;
+                case "post_code": page = userRepository.findByPostCodeContainsIgnoreCase(pageable, value); break;
+                default: page = userRepository.findAll(pageable);
+            }
+            if(page.isEmpty()){
+                return GlobalResponse.dataNotFound("IFUSFV051", request);
+            }
+            listDTO = entityToDTO(page.getContent());
+            data = tp.transformPagination(listDTO, page, column, value);
+        }catch (Exception e){
+            LoggingFile.logException(className, "findByParam(Pageable pageable, String column, String value, HttpServletRequest request) " + RequestCapture.allRequest(request), e);
+            return GlobalResponse.dataNotFound("IFUSFV051", request);
+        }
+        return GlobalResponse.dataFound(data, request);
     }
-}
 
+    public UserResponseDTO entityToDTO(User user) {
+        UserResponseDTO dto = new UserResponseDTO();
 
-public UserResponseDTO entityToDTO(User user){
-    UserResponseDTO userResponseDTO = new UserResponseDTO();
-    userResponseDTO.setAddress(user.getAddress());
-    userResponseDTO.setEmail(user.getEmail());
-    userResponseDTO.setName(user.getName());
-    userResponseDTO.setPhoneNumber(user.getPhoneNumber());
-    userResponseDTO.setPostCode(user.getPostCode());
-    return userResponseDTO;
+        dto.setId(user.getId());
+        dto.setName(user.getName());
+        dto.setEmail(user.getEmail());
+        dto.setPhoneNumber(user.getPhoneNumber());
+        dto.setAddress(user.getAddress());
+        dto.setPostCode(user.getPostCode());
+
+        // Convert Role entity to String
+        if (user.getRole() != null) {
+            dto.setRole(user.getRole().getRole());
+        }
+        return dto;
+    }
+
+    public List<UserResponseDTO> entityToDTO(List<User> users) {
+        List<UserResponseDTO> listUserDTO = new ArrayList<>();
+        for (User u : users) {
+            UserResponseDTO dto = new UserResponseDTO();
+
+            dto.setId(u.getId());
+            dto.setName(u.getName());
+            dto.setEmail(u.getEmail());
+            dto.setPhoneNumber(u.getPhoneNumber());
+            dto.setAddress(u.getAddress());
+            dto.setPostCode(u.getPostCode());
+
+            if (u.getRole() != null) {
+                dto.setRole(u.getRole().getRole());
+            }
+            listUserDTO.add(dto);
+        }
+        return listUserDTO;
+    }
+
 }
