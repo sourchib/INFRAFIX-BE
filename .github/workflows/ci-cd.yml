@@ -50,4 +50,13 @@ jobs:
             docker pull ${{ secrets.DOCKER_USERNAME }}/infrafix-be:latest
             docker stop infrafix-be || true
             docker rm infrafix-be || true
-            docker run -d --name infrafix-be -p 8082:8080 --network jc-network -e DB_URL="${{ secrets.DB_URL }}" -e DB_USERNAME="${{ secrets.DB_USERNAME }}" -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" -e JWT_SECRET="${{ secrets.JWT_SECRET }}" -e JWT_REFRESH_SECRET="${{ secrets.JWT_REFRESH_SECRET }}" infrafix-be:latest
+            docker run -d \
+              --name infrafix-be \
+              -p 8082:8080 \
+              --network jc-network \
+              -e DB_URL="${{ secrets.DB_URL }}" \
+              -e DB_USERNAME="${{ secrets.DB_USERNAME }}" \
+              -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+              -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+              -e JWT_REFRESH_SECRET="${{ secrets.JWT_REFRESH_SECRET }}" \
+              ${{ secrets.DOCKER_USERNAME }}/infrafix-be:latest
