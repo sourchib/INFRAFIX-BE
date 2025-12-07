@@ -33,7 +33,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/infrafix-be-image:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/infrafix-be:latest
 
   deploy:
     runs-on: ubuntu-latest
@@ -47,7 +47,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            docker pull ${{ secrets.DOCKER_USERNAME }}/infrafix-be-image:latest
+            docker pull ${{ secrets.DOCKER_USERNAME }}/infrafix-be:latest
             docker stop infrafix-be || true
             docker rm infrafix-be || true
-            docker run -d --name infrafix-be -p 8082:8080 --network jc-network -e DB_URL="${{ secrets.DB_URL }}" -e DB_USERNAME="${{ secrets.DB_USERNAME }}" -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" -e JWT_SECRET="${{ secrets.JWT_SECRET }}" -e JWT_REFRESH_SECRET="${{ secrets.JWT_REFRESH_SECRET }}" infrafix-be-image:latest
+            docker run -d --name infrafix-be -p 8082:8080 --network jc-network -e DB_URL="${{ secrets.DB_URL }}" -e DB_USERNAME="${{ secrets.DB_USERNAME }}" -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" -e JWT_SECRET="${{ secrets.JWT_SECRET }}" -e JWT_REFRESH_SECRET="${{ secrets.JWT_REFRESH_SECRET }}" infrafix-be:latest
