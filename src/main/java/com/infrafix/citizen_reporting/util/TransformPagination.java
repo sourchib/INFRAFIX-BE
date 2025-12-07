@@ -40,32 +40,4 @@ public class TransformPagination {
         map.put("value", value == null ? "":value);
         return map;
     }
-
-    public Map<String,Object> transformPagination(
-            List ls,
-            Page page,
-            String column,
-            String value,
-            String dateFrom,
-            String dateTp
-    ){
-        Sort s = page.getSort();
-        sortArr = s.toString().split(":");
-        sortByColumn = sortArr[0];
-        Boolean isSorted = sortByColumn.equals("UNSORTED");
-        sortByColumn = isSorted ? "id" : sortByColumn;
-        sort = isSorted ? "asc" : sortArr[1];
-
-        Map<String,Object> m = new HashMap<String,Object>();
-        m.put("content",ls);
-        m.put("total-data",page.getTotalElements());
-        m.put("total-pages",page.getTotalPages());
-        m.put("current-page",page.getNumber());
-        m.put("size-per-page",page.getSize());
-        m.put("sort-by",sortByColumn);
-        m.put("sort",sort.trim().toLowerCase());
-        m.put("column-name",column);
-        m.put("value",value==null?"":value);
-        return m;
-    }
 }

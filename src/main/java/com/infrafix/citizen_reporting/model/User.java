@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 
 @Entity
-@Table(name="Users",
+@Table(name="users",
 uniqueConstraints = @UniqueConstraint(name = "idx-combination", columnNames = {"Name","Address"}),
 indexes = @Index(name = "idx_email", columnList = "Email"))
 public class User {
@@ -36,7 +36,7 @@ public class User {
     private String postCode;
 
     @Column(name = "CreatedBy", nullable = false, updatable = false)
-    private Long createdBy = 1L;
+    private Long createdBy;
 
     @Column(name = "CreatedDate", nullable = false, updatable = false)
     @CreationTimestamp
@@ -54,6 +54,9 @@ public class User {
     @JoinColumn(name = "RoleID")
     private Role role;
 
+
+    // Getter Setter
+
     public Role getRole() {
         return role;
     }
@@ -61,7 +64,6 @@ public class User {
     public void setRole(Role role) {
         this.role = role;
     }
-    // End of Relation Block
 
     public Long getId() {
         return id;

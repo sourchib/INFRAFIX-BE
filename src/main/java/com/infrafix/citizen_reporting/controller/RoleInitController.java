@@ -9,11 +9,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/roles")
-public class RoleController {
+public class RoleInitController {
 
     private final RoleRepository roleRepository;
 
-    public RoleController(RoleRepository roleRepository) {
+    public RoleInitController(RoleRepository roleRepository) {
         this.roleRepository = roleRepository;
     }
 

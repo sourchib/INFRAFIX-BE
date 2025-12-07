@@ -1,7 +1,6 @@
 package com.infrafix.citizen_reporting.security;
 
 import org.mindrot.jbcrypt.BCrypt;
-import org.springframework.stereotype.Component;
 
 import java.util.function.Function;
 

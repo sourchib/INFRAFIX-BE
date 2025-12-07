@@ -1,6 +1,5 @@
 package com.infrafix.citizen_reporting.security;
 
-import com.infrafix.citizen_reporting.config.JwtConfig;
 import com.infrafix.citizen_reporting.service.AuthService;
 import com.infrafix.citizen_reporting.util.GlobalFunction;
 import com.infrafix.citizen_reporting.util.LoggingFile;
@@ -51,7 +50,6 @@ public class JwtFilter extends OncePerRequestFilter {
                 if(username != null && SecurityContextHolder.getContext().getAuthentication()== null){
                     if(jwtUtility.validateToken(token)){
                         UserDetails userDetails = authService.loadUserByUsername(username);
-                        /** persiapan konteks permission / izin / hak ases nya saat di dorong ke controller nantinya */
                         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, userDetails.getPassword(), userDetails.getAuthorities());
                         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(authentication);

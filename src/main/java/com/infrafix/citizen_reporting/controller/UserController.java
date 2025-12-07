@@ -1,9 +1,11 @@
 package com.infrafix.citizen_reporting.controller;
 
 import com.infrafix.citizen_reporting.config.OtherConfig;
+import com.infrafix.citizen_reporting.dto.validation.ValUserCreateDTO;
 import com.infrafix.citizen_reporting.model.User;
 import com.infrafix.citizen_reporting.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -23,8 +25,8 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<Object> save(@RequestBody User user, HttpServletRequest request) {
-        return userService.save(user, request);
+    public ResponseEntity<Object> save(@Valid @RequestBody ValUserCreateDTO dto, HttpServletRequest request) {
+        return userService.createCitizen(dto, request);
     }
 
     @PutMapping("/{id}")
@@ -32,8 +34,8 @@ public class UserController {
         return userService.update(id, user, request);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Object> delete(@PathVariable Long id, HttpServletRequest request){
         return userService.delete(id, request);
     }

@@ -3,13 +3,13 @@ package com.infrafix.citizen_reporting.security;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
 
 @Component
 public class JwtUtility {
@@ -22,7 +22,7 @@ public class JwtUtility {
         this.key = Keys.secretKeyFor(SignatureAlgorithm.HS512);
     }
 
-    private Claims getAllClaimsFromToken(String token) {
+    public Claims getAllClaimsFromToken(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
@@ -34,10 +34,7 @@ public class JwtUtility {
         Claims claims = getAllClaimsFromToken(token);
         Map<String, Object> map = new HashMap<>();
         map.put("userId", claims.get("id"));
-        map.put("username", claims.getSubject());
-        map.put("noHp", claims.get("hp"));
-        map.put("namaLengkap", claims.get("naleng"));
-        map.put("email", claims.get("em"));
+        map.put("email", claims.getSubject());
         map.put("role", claims.get("role"));
         return map;
     }
@@ -48,7 +45,7 @@ public class JwtUtility {
                 .setClaims(claims)
                 .setSubject(subject)
                 .setIssuedAt(new Date(now))
-                .setExpiration(new Date(now + 1800000)) // e.g., 30 min
+                .setExpiration(new Date(now + 1800000)) // 30 min
                 .signWith(key)
                 .compact();
     }
@@ -57,9 +54,6 @@ public class JwtUtility {
         return getAllClaimsFromToken(token).getSubject();
     }
 
-    public <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver) {
-        return claimsResolver.apply(getAllClaimsFromToken(token));
-    }
 
     public boolean validateToken(String token) {
         try {
@@ -67,5 +61,15 @@ public class JwtUtility {
         } catch (JwtException e) {
             return false;
         }
+    }
+
+    public String resolveToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")){
+            return bearerToken.substring(7);
+        }
+
+        return null;
     }
 }

@@ -1,4 +1,4 @@
-package com.infrafix.citizen_reporting.dto;
+package com.infrafix.citizen_reporting.dto.response;
 
 public class UserResponseDTO {
     private Long id;
@@ -8,6 +8,8 @@ public class UserResponseDTO {
     private String address;
     private String role;
     private String postCode;
+    private java.time.LocalDateTime createdDate;
+    private Long createdBy;
 
     public Long getId() {
         return id;
@@ -63,5 +65,21 @@ public class UserResponseDTO {
 
     public void setPostCode(String postCode) {
         this.postCode = postCode;
+    }
+
+    public java.time.LocalDateTime getCreatedDate() {
+        return createdDate;
+    }
+
+    public void setCreatedDate(java.time.LocalDateTime createdDate) {
+        this.createdDate = createdDate;
+    }
+
+    public Long getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(Long createdBy) {
+        this.createdBy = createdBy;
     }
 }

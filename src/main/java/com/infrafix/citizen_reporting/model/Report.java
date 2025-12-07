@@ -1,12 +1,13 @@
 package com.infrafix.citizen_reporting.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "Report")
+@Table(name = "report")
 public class Report {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -18,8 +19,18 @@ public class Report {
     @Column(name = "Description", nullable = false, length = 100)
     private String description;
 
-    @Column(name = "Address", nullable = false, length = 100)
-    private String address;
+    @Column(name = "Street", nullable = false, length = 100)
+    private String street;
+
+    @Column(name = "City", nullable = false, length = 50)
+    private String city;
+
+    @Column(name = "Province", nullable = false, length = 50)
+    private String province;
+
+    @Column(name = "PostCode", nullable = false, length = 10)
+    private String postCode;
+
 
     @Column(name = "CreatedBy", nullable = false, updatable = false)
     private Long createdBy;
@@ -39,15 +50,18 @@ public class Report {
     // Many to One Relation With User
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "UserID")
+    @JsonIgnore
     private User user;
-    // End of Relation User
+
 
     // Many to One Relation With Status
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "StatusID")
+    @JsonIgnore
     private Status status;
-    // End of Relation Status
 
+
+    // Getter Setter
 
     public Long getId() {
         return id;
@@ -71,14 +85,6 @@ public class Report {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
     }
 
     public Long getCreatedBy() {
@@ -127,5 +133,37 @@ public class Report {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public String getStreet() {
+        return street;
+    }
+
+    public void setStreet(String street) {
+        this.street = street;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public String getProvince() {
+        return province;
+    }
+
+    public void setProvince(String province) {
+        this.province = province;
+    }
+
+    public String getPostCode() {
+        return postCode;
+    }
+
+    public void setPostCode(String postCode) {
+        this.postCode = postCode;
     }
 }

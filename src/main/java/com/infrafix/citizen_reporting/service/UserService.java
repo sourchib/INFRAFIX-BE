@@ -1,12 +1,14 @@
 package com.infrafix.citizen_reporting.service;
 
-import com.infrafix.citizen_reporting.core.IService;
-import com.infrafix.citizen_reporting.dto.UserResponseDTO;
+import com.infrafix.citizen_reporting.core.IUserService;
+import com.infrafix.citizen_reporting.dto.response.UserResponseDTO;
+import com.infrafix.citizen_reporting.dto.validation.ValUserCreateDTO;
 import com.infrafix.citizen_reporting.model.Role;
 import com.infrafix.citizen_reporting.model.User;
 import com.infrafix.citizen_reporting.repo.RoleRepository;
 import com.infrafix.citizen_reporting.repo.UserRepository;
 import com.infrafix.citizen_reporting.security.BcryptCustom;
+import com.infrafix.citizen_reporting.security.JwtContextUtil;
 import com.infrafix.citizen_reporting.util.GlobalResponse;
 import com.infrafix.citizen_reporting.util.LoggingFile;
 import com.infrafix.citizen_reporting.util.RequestCapture;
@@ -31,7 +33,7 @@ import java.util.Optional;
 
 @Service
 @Transactional
-public class UserService implements IService<User> {
+public class UserService implements IUserService<ValUserCreateDTO, User> {
     @Autowired
     private UserRepository userRepository;
 
@@ -44,45 +46,62 @@ public class UserService implements IService<User> {
     @Autowired
     private BcryptCustom bcryptCustom;
 
+    @Autowired
+    private RoleRepository roleRepo;
+
+    @Autowired
+    private JwtContextUtil jwtContextUtil;
 
     private static final String className = "UserService";
 
+
+    // SAVE
+
     @Override
-    public ResponseEntity<Object> save(User user, HttpServletRequest request){
-        if(user == null){
+    public ResponseEntity<Object> createCitizen(ValUserCreateDTO dto, HttpServletRequest request) {
+
+        if (dto == null) {
             return GlobalResponse.dataCreationFailed("IFUSFV001", request);
         }
-
         try {
+            Long creatorId = 0L; // 0 = New User
+
+            User user = new User();
+            user.setName(dto.getName());
+            user.setEmail(dto.getEmail());
+            user.setAddress(dto.getAddress());
+            user.setPhoneNumber(dto.getPhoneNumber());
+            user.setPostCode(dto.getPostCode());
+            user.setCreatedBy(creatorId);
+
             // Hash Password
-            String hashedPassword = bcryptCustom.hash(user.getPassword());
+            String hashedPassword = bcryptCustom.hash(dto.getPassword());
             user.setPassword(hashedPassword);
 
-            // Check if Role exist on DB
-            if (user.getRole() == null) {
-                Role citizenRole = roleRepository.findById(1L)
-                        .orElseThrow(() -> new RuntimeException("Role with ID 1 (citizen) not found"));
-                user.setRole(citizenRole);
-            } else {
-                // Optional: Overwrite Role ID if Provided
-                Long roleId = user.getRole().getId();
-                Role existingRole = roleRepository.findById(roleId)
-                        .orElseThrow(() -> new RuntimeException("Role with ID " + roleId + " not found"));
-                user.setRole(existingRole);
-            }
+            // Always assign CITIZEN role
+            Role citizenRole = roleRepository.findById(1L)
+                    .orElseThrow(() -> new RuntimeException("Citizen role not found"));
+            user.setRole(citizenRole);
 
-            // Save User
-            userRepository.save(user);
+            // Save Citizen
+            User savedUser = userRepository.save(user);
+            UserResponseDTO userResponseDTO = entityToDTO(savedUser);
+            return GlobalResponse.created(userResponseDTO, request);
 
-        } catch (Exception e){
-            LoggingFile.logException(className,"save(User user, HttpServletRequest request) "
-                    + RequestCapture.allRequest(request), e);
+        } catch (Exception e) {
+            LoggingFile.logException(
+                    className,
+                    "createCitizen(ValUserCreateDTO dto, HttpServletRequest request) " +
+                            RequestCapture.allRequest(request),
+                    e
+            );
             return GlobalResponse.dataCreationFailed("IFUSFE001", request);
         }
-
-        return GlobalResponse.dataCreation(request);
     }
 
+
+
+    // UPDATE
 
     @Override
     public ResponseEntity<Object> update(Long id, User user, HttpServletRequest request){
@@ -94,13 +113,16 @@ public class UserService implements IService<User> {
             if(optionalUser.isEmpty()){
                 return GlobalResponse.dataNotFound("IFUSFV041", request);
             }
+
+            Long modifierId = jwtContextUtil.getCurrentUserId(request);
+
             User nextUser = optionalUser.get();
             nextUser.setName(user.getName());
             nextUser.setAddress(user.getAddress());
             nextUser.setEmail(user.getEmail());
             nextUser.setPhoneNumber(user.getPhoneNumber());
             nextUser.setPostCode(user.getPostCode());
-            nextUser.setModifiedBy(user.getModifiedBy());
+            nextUser.setModifiedBy(modifierId);
             userRepository.save(nextUser);
         } catch (Exception e){
             LoggingFile.logException(className,"update(Long id, User user, HttpServletRequest request) " + RequestCapture.allRequest(request), e);
@@ -108,6 +130,9 @@ public class UserService implements IService<User> {
         }
         return GlobalResponse.dataUpdate(request);
     }
+
+
+    // DELETE
 
     @Override
     public ResponseEntity<Object> delete (Long id, HttpServletRequest request){
@@ -126,6 +151,9 @@ public class UserService implements IService<User> {
         }
         return GlobalResponse.dataDeletion(request);
     }
+
+
+    // FIND BY ID
 
     @Override
     public ResponseEntity<Object> findById (Long id, HttpServletRequest request){
@@ -148,6 +176,9 @@ public class UserService implements IService<User> {
         return GlobalResponse.dataFound(userResponseDTO, request);
     }
 
+
+    // FIND ALL
+
     @Override
     public ResponseEntity<Object> findAll (Pageable pageable, HttpServletRequest request){
         Page<User> page = null;
@@ -163,10 +194,13 @@ public class UserService implements IService<User> {
             data = tp.transformPagination(listDTO, page, "id", "");
         } catch (Exception e){
             LoggingFile.logException(className,"findAll(Pageable pageable, HttpServletRequest request) " + RequestCapture.allRequest(request), e);
-            return GlobalResponse.errorOccurred("IFUSFE041", request);
+            return GlobalResponse.internalServerError("IFUSFE041", request);
         }
         return GlobalResponse.dataFound(data, request);
     }
+
+
+    // FIND BY PARAM
 
     @Override
     public ResponseEntity<Object> findByParam (Pageable pageable, String column, String value, HttpServletRequest request){
@@ -175,13 +209,13 @@ public class UserService implements IService<User> {
         Page<UserResponseDTO> pageRespo = null;
         Map<String, Object> data = null;
         try{
-            switch(column){
-                case "name": page = userRepository.findByNameContainsIgnoreCase(pageable, value); break;
-                case "email": page = userRepository.findByEmailContainsIgnoreCase(pageable, value); break;
-                case "address": page = userRepository.findByAddressContainsIgnoreCase(pageable, value); break;
-                case "post_code": page = userRepository.findByPostCodeContainsIgnoreCase(pageable, value); break;
-                default: page = userRepository.findAll(pageable);
-            }
+            page = switch (column) {
+                case "name" -> userRepository.findByNameContainsIgnoreCase(pageable, value);
+                case "email" -> userRepository.findByEmailContainsIgnoreCase(pageable, value);
+                case "address" -> userRepository.findByAddressContainsIgnoreCase(pageable, value);
+                case "post_code" -> userRepository.findByPostCodeContainsIgnoreCase(pageable, value);
+                default -> userRepository.findAll(pageable);
+            };
             if(page.isEmpty()){
                 return GlobalResponse.dataNotFound("IFUSFV051", request);
             }
@@ -193,6 +227,112 @@ public class UserService implements IService<User> {
         }
         return GlobalResponse.dataFound(data, request);
     }
+
+
+    // CREATE TECHNICIAN
+
+    @Override
+    public ResponseEntity<Object> createTechnician(ValUserCreateDTO dto, HttpServletRequest request) {
+
+        try {
+            if (dto == null) {
+                return GlobalResponse.dataCreationFailed("IFUSTC001", request);
+            }
+
+            Long creatorId = jwtContextUtil.getCurrentUserId(request);
+
+            // Validate duplicate email
+            if (userRepository.existsByEmail(dto.getEmail())) {
+                return GlobalResponse.dataCreationFailed("IFUSTC002", request);
+            }
+
+            // Get Technician Role
+            Role technicianRole = roleRepo.findByRole("Technician")
+                    .orElseThrow(() -> new RuntimeException("Technician Role missing"));
+
+            // Create user
+            User user = new User();
+            user.setName(dto.getName());
+            user.setEmail(dto.getEmail());
+            user.setPassword(bcryptCustom.hash(dto.getPassword()));
+            user.setPhoneNumber(dto.getPhoneNumber());
+            user.setAddress(dto.getAddress());
+            user.setPostCode(dto.getPostCode());
+            user.setRole(technicianRole);
+            user.setCreatedBy(creatorId);
+
+            User saved = userRepository.save(user);
+
+            // Convert to DTO
+            UserResponseDTO responseDTO = entityToDTO(saved);
+            return GlobalResponse.created(responseDTO, request);
+
+
+        } catch (Exception e) {
+            LoggingFile.logException(
+                    className,
+                    "createTechnician(ValUserCreateDTO dto, HttpServletRequest request) "
+                            + RequestCapture.allRequest(request),
+                    e
+            );
+            return GlobalResponse.dataCreationFailed("IFUSTC999", request);
+        }
+    }
+
+
+    // CREATE ADMIN
+
+    @Override
+    public ResponseEntity<Object> createAdmin(ValUserCreateDTO dto, HttpServletRequest request) {
+        if (dto == null) {
+            return GlobalResponse.dataCreationFailed("IFUSFV001", request);
+        }
+
+        try {
+            // Get the currently logged-in admin ID
+            Long creatorId = jwtContextUtil.getCurrentUserId(request);
+
+            // Check duplicate email
+            if (userRepository.existsByEmail(dto.getEmail())) {
+                return GlobalResponse.dataCreationFailed("IFUSFV002", request);
+            }
+
+            User user = new User();
+            user.setName(dto.getName());
+            user.setEmail(dto.getEmail());
+            user.setAddress(dto.getAddress());
+            user.setPhoneNumber(dto.getPhoneNumber());
+            user.setPostCode(dto.getPostCode());
+            user.setCreatedBy(creatorId);
+
+            // Hash password
+            user.setPassword(bcryptCustom.hash(dto.getPassword()));
+
+            // Assign ADMIN role
+            Role adminRole = roleRepository.findById(2L)
+                    .orElseThrow(() -> new RuntimeException("Admin role not found"));
+            user.setRole(adminRole);
+
+            User savedUser = userRepository.save(user);
+
+            // Map to DTO
+            UserResponseDTO responseDTO = entityToDTO(savedUser);
+
+            return GlobalResponse.created(responseDTO, request);
+
+        } catch (Exception e) {
+            LoggingFile.logException(
+                    className,
+                    "createAdmin(ValUserCreateDTO dto, HttpServletRequest request) " +
+                            RequestCapture.allRequest(request),
+                    e
+            );
+            return GlobalResponse.dataCreationFailed("IFUSFE001", request);
+        }
+    }
+
+
+    // DTO
 
     public UserResponseDTO entityToDTO(User user) {
         UserResponseDTO dto = new UserResponseDTO();
@@ -230,5 +370,4 @@ public class UserService implements IService<User> {
         }
         return listUserDTO;
     }
-
 }

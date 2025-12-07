@@ -15,7 +15,7 @@ public class OtherConfig {
     public static String getEnableLogFile() {
         return enableLogFile;
     }
-    @Value("${enable.log.file}")
+    @Value("false")
     private void setEnableLogFile(String enableLogFile){
         OtherConfig.enableLogFile = enableLogFile;
     }
@@ -25,7 +25,7 @@ public class OtherConfig {
     public static String getEnablePrintConsole() {
         return enablePrintConsole;
     }
-    @Value("${enable.print.console}")
+    @Value("false")
     private void setEnablePrintConsole(String enablePrintConsole){
         OtherConfig.enablePrintConsole = enablePrintConsole;
     }

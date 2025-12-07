@@ -1,11 +1,7 @@
 package com.infrafix.citizen_reporting.util;
 
-import com.fasterxml.jackson.databind.util.JSONPObject;
 import jakarta.servlet.http.HttpServletRequest;
 import org.json.simple.JSONObject;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 
 import java.io.BufferedReader;
@@ -15,12 +11,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class RequestCapture {
-    public static String allRequest(WebRequest webRequest){
-        HttpServletRequest request =
-                ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes())
-                        .getRequest();
-        return processingData(request);
-    }
 
     private static String processingData(HttpServletRequest request){
         String headerName="";

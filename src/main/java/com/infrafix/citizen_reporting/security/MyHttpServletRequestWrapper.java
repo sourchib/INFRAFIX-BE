@@ -6,11 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import java.io.*;
 
-/**
- Data stream servlet saat sudah dipanggil akan hilang
- prose override pada class ini untuk membuat object penampung data nya
- dengan tujuan agar data nya dapat digunakan di class lain.
- */
+
 public class MyHttpServletRequestWrapper extends HttpServletRequestWrapper {
     private final String body;public MyHttpServletRequestWrapper(HttpServletRequest request) {
         super(request);

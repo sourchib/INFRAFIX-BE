@@ -16,10 +16,8 @@ public class Role {
     @Column(unique = true, nullable = false)
     private String role;
 
-    // Default constructor
     public Role() {}
 
-    // Constructor to set id
     public Role(Long id) {
         this.id = id;
     }
@@ -37,10 +35,9 @@ public class Role {
     public void setUsers(List<User> users) {
         this.users = users;
     }
-    // End of Relation (User)
 
+    // Getter Setter
 
-    // Getter Setter of Role
     public Long getId() {
         return id;
     }

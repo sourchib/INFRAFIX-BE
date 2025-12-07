@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 import java.util.List;
 
 @Entity
-@Table(name = "Status")
+@Table(name = "status")
 public class Status {
 
     @Id
@@ -20,7 +20,7 @@ public class Status {
     @OneToMany(mappedBy = "status")
     private List<Report> reports;
 
-    // Getters & Setters
+    // Getters Setters
     public Long getId() {
         return id;
     }
