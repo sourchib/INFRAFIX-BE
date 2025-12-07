@@ -41,4 +41,5 @@ public class AuthController {
     public ResponseEntity<UserResponseDTO> register(@RequestBody ValUserCreateDTO userCreateDTO) {
         return authService.register(userCreateDTO);
     }
+
 }

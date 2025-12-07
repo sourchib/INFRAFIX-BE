@@ -1,11 +1,14 @@
 package com.infrafix.citizen_reporting.security;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -17,6 +20,11 @@ import java.util.Arrays;
 @EnableMethodSecurity
 @Configuration
 public class SecurityConfig {
+
+    @Autowired
+    @Qualifier("customAuthenticationEntryPoint")
+    private AuthenticationEntryPoint authenticationEntryPoint;
+
     @Bean
     public BcryptCustom bcryptCustom() {
         return new BcryptCustom(10);
@@ -51,6 +59,7 @@ public class SecurityConfig {
                         .requestMatchers("/report/download/*").permitAll()
                         .anyRequest().authenticated()
                 )
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
