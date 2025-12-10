@@ -37,7 +37,7 @@ public class AdminInitController {
     admin.setEmail("admin@example.com");
     admin.setPhoneNumber("08123456789");
     admin.setAddress("System");
-    admin.setPostCode("00000");
+    admin.setPostCode("66182");
     admin.setCreatedBy(1L);
     admin.setIsEmailVerified(true);
     admin.setPassword(bcryptCustom.hash("Admin123!"));

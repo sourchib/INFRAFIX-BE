@@ -17,44 +17,44 @@ public class User {
     @Column(name = "ID")
     private Long id;
 
-    @Column(name = "Name", length = 50, nullable = false)
+    @Column(name = "name", length = 50, nullable = false)
     private String name;
 
-    @Column(name = "Password", nullable = false)
+    @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "Email", length = 30, nullable = false, unique = true)
+    @Column(name = "email", length = 30, nullable = false, unique = true)
     private String email;
 
-    @Column(name = "PhoneNumber", length = 13, nullable = false)
+    @Column(name = "phone_number", length = 13, nullable = false)
     private String phoneNumber;
 
-    @Column(name = "Address", nullable = false)
+    @Column(name = "address", nullable = false)
     private String address;
 
-    @Column(name = "PostCode", length = 5, nullable = false, columnDefinition = "CHAR(5)")
+    @Column(name = "post_code", length = 5, nullable = false, columnDefinition = "CHAR(5)")
     private String postCode;
 
-    @Column(name = "CreatedBy", nullable = false, updatable = false)
+    @Column(name = "created_by", nullable = true)
     private Long createdBy;
 
-    @Column(name = "CreatedDate", nullable = false, updatable = false)
+    @Column(name = "created_date", nullable = false, updatable = false)
     @CreationTimestamp
     private LocalDateTime createdDate;
 
-    @Column(name = "ModifiedBy")
+    @Column(name = "modified_by")
     private Long modifiedBy;
 
-    @Column(name = "ModifiedDate")
+    @Column(name = "modified_date")
     @UpdateTimestamp
     private LocalDateTime modifiedDate;
 
-    @Column(name = "IsEmailVerified", nullable = false)
+    @Column(name = "is_email_verified", nullable = false)
     private Boolean isEmailVerified = false;
 
     // Relation Many to One (Role)
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "RoleID")
+    @JoinColumn(name = "role_id")
     private Role role;
 
 

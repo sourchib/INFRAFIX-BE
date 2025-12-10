@@ -10,6 +10,7 @@ import com.infrafix.citizen_reporting.security.BcryptCustom;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -31,9 +32,16 @@ public class DatabaseInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        // Skip initialization if data=true argument is provided
+        for (String arg : args) {
+            if ("data=true".equals(arg)) {
+                System.out.println("Database initialization skipped due to data=true argument.");
+                return;
+            }
+        }
         initializeRoles();
         initializeStatuses();
-        initializeAdmin();
+        // initializeAdmin();
     }
 
     private void initializeRoles() {
@@ -67,25 +75,25 @@ public class DatabaseInitializer implements CommandLineRunner {
         return role;
     }
 
-    private void initializeAdmin() {
-        if (userRepository.count() == 0) {
-            User admin = new User();
-            admin.setName("Admin");
-            admin.setEmail("admin@example.com");
-            admin.setPhoneNumber("08123456789");
-            admin.setAddress("System");
-            admin.setPostCode("00000");
-            admin.setCreatedBy(1L);
-            admin.setIsEmailVerified(true);
-            admin.setPassword(bcryptCustom.hash("Admin123!"));
-            Role role = roleRepository.findByRole("admin")
-                    .orElseThrow(() -> new RuntimeException("admin Role Not Found"));
-            admin.setRole(role);
+    // private void initializeAdmin() {
+    //     if (userRepository.count() == 0) {
+    //         User admin = new User();
+    //         admin.setName("Admin");
+    //         admin.setEmail("admin@example.com");
+    //         admin.setPhoneNumber("08123456789");
+    //         admin.setAddress("System");
+    //         admin.setPostCode("00000");
+    //         admin.setCreatedBy(1L);
+    //         admin.setIsEmailVerified(true);
+    //         admin.setPassword(bcryptCustom.hash("Admin123!"));
+    //         Role role = roleRepository.findByRole("admin")
+    //                 .orElseThrow(() -> new RuntimeException("admin Role Not Found"));
+    //         admin.setRole(role);
 
-            userRepository.save(admin);
-            System.out.println("Default admin user initialized.");
-        }
-    }
+    //         userRepository.save(admin);
+    //         System.out.println("Default admin user initialized.");
+    //     }
+    // }
 
     private Status createStatus(String name) {
         Status s = new Status();
