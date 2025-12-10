@@ -6,25 +6,27 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
-
 import java.io.IOException;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
-@Component("customAuthenticationEntryPoint")
+@Component
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
                          AuthenticationException authException) throws IOException, ServletException {
         response.setContentType("application/json");
-        response.setStatus(HttpServletResponse.SC_OK);
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
         Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("data", null);
-        errorResponse.put("success", true);
-        errorResponse.put("message", "Welcome to INFRAFIX API v1.0");
-        errorResponse.put("status", 200);
+        errorResponse.put("success", false);
+        errorResponse.put("error-code", "X01001");
+        errorResponse.put("error", "Otentikasi Bermasalah");
+        errorResponse.put("status", 401);
+        errorResponse.put("timestamp", OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
 
         response.getWriter().write(new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(errorResponse));
     }

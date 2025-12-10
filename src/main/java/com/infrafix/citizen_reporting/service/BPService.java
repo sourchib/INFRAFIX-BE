@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 public class BPService {
     @Scheduled(fixedRate = 60000)
     public void healthChecking(){
-        System.out.println("MASIH AMAN BOSQU");
+        System.out.println("MASIH AMAN");
     }
 
     @Async

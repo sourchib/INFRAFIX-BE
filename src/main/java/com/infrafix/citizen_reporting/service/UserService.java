@@ -13,6 +13,7 @@ import com.infrafix.citizen_reporting.util.GlobalResponse;
 import com.infrafix.citizen_reporting.util.LoggingFile;
 import com.infrafix.citizen_reporting.util.RequestCapture;
 import com.infrafix.citizen_reporting.util.TransformPagination;
+import com.infrafix.citizen_reporting.security.JwtUtility;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -51,6 +53,12 @@ public class UserService implements IUserService<ValUserCreateDTO, User> {
 
     @Autowired
     private JwtContextUtil jwtContextUtil;
+
+    @Autowired
+    private EmailService emailService;
+
+    @Autowired
+    private JwtUtility jwtUtility;
 
     private static final String className = "UserService";
 
@@ -85,6 +93,17 @@ public class UserService implements IUserService<ValUserCreateDTO, User> {
 
             // Save Citizen
             User savedUser = userRepository.save(user);
+
+            // Generate email verification token
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("email", savedUser.getEmail());
+            claims.put("userId", savedUser.getId());
+            claims.put("purpose", "email_verification");
+            String verificationToken = jwtUtility.doGenerateToken(claims, savedUser.getEmail());
+
+            // Send verification email
+            emailService.sendVerificationEmail(savedUser.getEmail(), verificationToken, savedUser.getName());
+
             UserResponseDTO userResponseDTO = entityToDTO(savedUser);
             return GlobalResponse.created(userResponseDTO, request);
 
@@ -263,6 +282,16 @@ public class UserService implements IUserService<ValUserCreateDTO, User> {
 
             User saved = userRepository.save(user);
 
+            // Generate email verification token
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("email", saved.getEmail());
+            claims.put("userId", saved.getId());
+            claims.put("purpose", "email_verification");
+            String verificationToken = jwtUtility.doGenerateToken(claims, saved.getEmail());
+
+            // Send verification email
+            emailService.sendVerificationEmail(saved.getEmail(), verificationToken, saved.getName());
+
             // Convert to DTO
             UserResponseDTO responseDTO = entityToDTO(saved);
             return GlobalResponse.created(responseDTO, request);
@@ -314,6 +343,16 @@ public class UserService implements IUserService<ValUserCreateDTO, User> {
             user.setRole(adminRole);
 
             User savedUser = userRepository.save(user);
+
+            // Generate email verification token
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("email", savedUser.getEmail());
+            claims.put("userId", savedUser.getId());
+            claims.put("purpose", "email_verification");
+            String verificationToken = jwtUtility.doGenerateToken(claims, savedUser.getEmail());
+
+            // Send verification email
+            emailService.sendVerificationEmail(savedUser.getEmail(), verificationToken, savedUser.getName());
 
             // Map to DTO
             UserResponseDTO responseDTO = entityToDTO(savedUser);

@@ -49,6 +49,9 @@ public class User {
     @UpdateTimestamp
     private LocalDateTime modifiedDate;
 
+    @Column(name = "IsEmailVerified", nullable = false)
+    private Boolean isEmailVerified = false;
+
     // Relation Many to One (Role)
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "RoleID")
@@ -151,5 +154,13 @@ public class User {
 
     public void setModifiedDate(LocalDateTime modifiedDate) {
         this.modifiedDate = modifiedDate;
+    }
+
+    public Boolean getIsEmailVerified() {
+        return isEmailVerified;
+    }
+
+    public void setIsEmailVerified(Boolean isEmailVerified) {
+        this.isEmailVerified = isEmailVerified;
     }
 }

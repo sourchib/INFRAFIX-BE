@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verifikasi Email</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .header h1 {
+            color: #333333;
+            margin-bottom: 20px;
+        }
+        .content p {
+            color: #666666;
+            line-height: 1.6;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #999999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>INFRAFIX</h1>
+        </div>
+        <div class="content">
+            <p>Dear {{recipientName}},</p>
+            <p>Terima kasih telah mendaftar di INFRAFIX Citizen Reporting. Untuk menyelesaikan pendaftaran Anda, harap verifikasi alamat email Anda dengan mengklik tombol di bawah ini:</p>
+            <a href="{{verificationUrl}}" class="button">Verifikasi Alamat Email</a>
+            <p>Jika tombol tidak berfungsi, Anda dapat menyalin dan menempelkan tautan ini ke browser Anda:</p>
+            <p><a href="{{verificationUrl}}">{{verificationUrl}}</a></p>
+            <p>Tautan verifikasi ini akan kedaluwarsa dalam 24 jam.</p>
+            <p>Jika Anda tidak membuat akun, harap abaikan email ini.</p>
+            <p>Best regards,<br>
+            Tim INFRAFIX</p>
+        </div>
+        <div class="footer">
+            <p>Ini adalah pesan otomatis. Harap jangan balas email ini.</p>
+        </div>
+    </div>
+</body>
+</html>

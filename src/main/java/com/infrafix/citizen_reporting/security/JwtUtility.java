@@ -33,9 +33,10 @@ public class JwtUtility {
     public Map<String, Object> mappingBodyToken(String token) {
         Claims claims = getAllClaimsFromToken(token);
         Map<String, Object> map = new HashMap<>();
-        map.put("userId", claims.get("id"));
+        map.put("userId", claims.get("userId"));
         map.put("email", claims.getSubject());
         map.put("role", claims.get("role"));
+        map.put("purpose", claims.get("purpose"));
         return map;
     }
 

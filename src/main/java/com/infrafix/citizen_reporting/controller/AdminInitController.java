@@ -25,6 +25,9 @@ public class AdminInitController {
 
     @PostMapping("/init")
     public String initAdmin() {
+        if (!userRepository.findAll().isEmpty()) {
+            return "System already initialized.";
+        }
         if (userRepository.existsByEmail("admin@example.com")) {
         return "Admin already initialized.";
     }
@@ -36,9 +39,10 @@ public class AdminInitController {
     admin.setAddress("System");
     admin.setPostCode("00000");
     admin.setCreatedBy(1L);
+    admin.setIsEmailVerified(true);
     admin.setPassword(bcryptCustom.hash("Admin123!"));
-    Role role = roleRepository.findById(2L)
-            .orElseThrow(() -> new RuntimeException("Role Not Found"));
+    Role role = roleRepository.findByRole("admin")
+            .orElseThrow(() -> new RuntimeException("admin Role Not Found"));
     admin.setRole(role);
 
     userRepository.save(admin);
@@ -47,4 +51,3 @@ public class AdminInitController {
 
 
 }
-

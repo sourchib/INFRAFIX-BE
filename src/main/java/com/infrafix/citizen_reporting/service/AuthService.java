@@ -36,13 +36,15 @@ public class AuthService implements IAuthService<User> {
     private final RoleRepository roleRepository;
     private final BcryptCustom bcryptCustom;
     private final JwtUtility jwtUtility;
+    private final EmailService emailService;
     private static final String className = "AuthService";
 
-    public AuthService(UserRepository userRepository, RoleRepository roleRepository, BcryptCustom bcryptCustom, JwtUtility jwtUtility) {
+    public AuthService(UserRepository userRepository, RoleRepository roleRepository, BcryptCustom bcryptCustom, JwtUtility jwtUtility, EmailService emailService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.bcryptCustom = bcryptCustom;
         this.jwtUtility = jwtUtility;
+        this.emailService = emailService;
     }
 
 
@@ -64,6 +66,11 @@ public class AuthService implements IAuthService<User> {
                 return GlobalResponse.incorrectPassword("IFASE020", request);
             }
 
+            // Email verification check
+            if (!user.getIsEmailVerified()) {
+                return GlobalResponse.badRequest("Email not verified", request);
+            }
+
             // Role check
             if (user.getRole() == null) {
                 return GlobalResponse.dataNotFound("IFASE010", request);
@@ -78,10 +85,11 @@ public class AuthService implements IAuthService<User> {
 
             // Data to return
             Map<String, Object> data = new HashMap<>();
+            data.put("name", user.getName());
             data.put("token", token);
             data.put("role", user.getRole().getRole());
             data.put("email", user.getEmail());
-
+            
             return GlobalResponse.dataFound(data, request);
 
         } catch (Exception e) {
@@ -122,9 +130,9 @@ public class AuthService implements IAuthService<User> {
             user.setPostCode(userCreateDTO.getPostCode());
             user.setPassword(bcryptCustom.hash(userCreateDTO.getPassword()));
 
-            // Assign default role (e.g., "CITIZEN")
-            Role defaultRole = roleRepository.findByRole("CITIZEN")
-                    .orElseThrow(() -> new RuntimeException("Default role 'CITIZEN' not found"));
+            // Assign default role (e.g., "citizen")
+            Role defaultRole = roleRepository.findByRole("citizen")
+                    .orElseThrow(() -> new RuntimeException("Default role 'citizen' not found"));
             user.setRole(defaultRole);
 
             // Set createdBy (e.g., 0L for system/anonymous registration)
@@ -133,6 +141,17 @@ public class AuthService implements IAuthService<User> {
             // Save user
             User savedUser = userRepository.save(user);
 
+            // Generate email verification token
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("name", savedUser.getName());
+            claims.put("email", savedUser.getEmail());
+            claims.put("userId", savedUser.getId());
+            claims.put("purpose", "email_verification");
+            String verificationToken = jwtUtility.doGenerateToken(claims, savedUser.getEmail());
+
+            // Send verification email
+            emailService.sendVerificationEmail(savedUser.getEmail(), verificationToken, savedUser.getName());
+            
             // Prepare response data (excluding sensitive info like password)
             UserResponseDTO userResponseDTO = new UserResponseDTO();
             userResponseDTO.setId(savedUser.getId());
@@ -150,6 +169,48 @@ public class AuthService implements IAuthService<User> {
         } catch (Exception e) {
             LoggingFile.logException(className, "register(ValUserCreateDTO userCreateDTO)", e);
             return GlobalResponse.<UserResponseDTO>internalServerError("IFASV040", null);
+        }
+    }
+
+    // VERIFY EMAIL
+    public ResponseEntity<Object> verifyEmail(String token, HttpServletRequest request) {
+        try {
+            // Validate token
+            if (!jwtUtility.validateToken(token)) {
+                return GlobalResponse.badRequest("Invalid or expired token", request);
+            }
+
+            // Get claims
+            Map<String, Object> claims = jwtUtility.mappingBodyToken(token);
+            String purpose = (String) claims.get("purpose");
+            if (!"email_verification".equals(purpose)) {
+                return GlobalResponse.badRequest("Invalid token purpose", request);
+            }
+
+            Long userId = ((Number) claims.get("userId")).longValue();
+            String email = (String) claims.get("email");
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            // Verify that the email in the token matches the user's email
+            if (!email.equals(user.getEmail())) {
+                return GlobalResponse.badRequest("Invalid token", request);
+            }
+
+            // Check if already verified
+            if (user.getIsEmailVerified()) {
+                return GlobalResponse.dataFound("Email already verified", request);
+            }
+
+            // Mark as verified
+            user.setIsEmailVerified(true);
+            userRepository.save(user);
+
+            return GlobalResponse.dataUpdate(request);
+
+        } catch (Exception e) {
+            LoggingFile.logException(className, "verifyEmail(String token, HttpServletRequest request)", e);
+            return GlobalResponse.internalServerError("Verification failed", request);
         }
     }
 }

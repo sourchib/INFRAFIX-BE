@@ -42,4 +42,9 @@ public class AuthController {
         return authService.register(userCreateDTO);
     }
 
+    @GetMapping("/verify-email")
+    public ResponseEntity<Object> verifyEmail(@RequestParam String token, HttpServletRequest request) {
+        return authService.verifyEmail(token, request);
+    }
+
 }
