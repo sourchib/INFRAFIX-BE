@@ -49,15 +49,13 @@ public class ReportService implements IReportService<ValReportCreateDTO> {
 
     private static final String className = "ReportService";
 
-
     public ReportService(
             ReportRepository reportRepo,
             StatusRepository statusRepo,
             UserRepository userRepo,
             JwtContextUtil jwtContextUtil,
             TechnicianService technicianService,
-            TransformPagination tp
-    ) {
+            TransformPagination tp) {
         this.reportRepo = reportRepo;
         this.statusRepo = statusRepo;
         this.userRepo = userRepo;
@@ -65,7 +63,6 @@ public class ReportService implements IReportService<ValReportCreateDTO> {
         this.technicianService = technicianService;
         this.tp = tp;
     }
-
 
     // CREATE REPORT
 
@@ -102,7 +99,6 @@ public class ReportService implements IReportService<ValReportCreateDTO> {
         }
     }
 
-
     // GET ALL REPORTS
 
     @Override
@@ -126,7 +122,6 @@ public class ReportService implements IReportService<ValReportCreateDTO> {
         }
     }
 
-
     // GET REPORT BY ID
 
     @Override
@@ -148,6 +143,31 @@ public class ReportService implements IReportService<ValReportCreateDTO> {
         }
     }
 
+    // DELETE REPORT
+
+    @Override
+    public ResponseEntity<Object> deleteReport(Long id, HttpServletRequest request) {
+        try {
+            Report report = reportRepo.findById(id).orElse(null);
+
+            if (report == null) {
+                return GlobalResponse.dataNotFound("IFRSV02", request);
+            }
+
+            // Optional: Unassign technician before delete if strictly required by FK
+            // constraints,
+            // but usually Cascade or simple delete handles it unless specialized logic is
+            // needed.
+            // technicianService.unassignTechnician(id, request);
+
+            reportRepo.delete(report);
+            return GlobalResponse.dataDeletion(request);
+
+        } catch (Exception e) {
+            LoggingFile.logException(className, "deleteReport(Long id, HttpServletRequest request)", e);
+            return GlobalResponse.internalServerError("IFRSE06", request);
+        }
+    }
 
     // GENERAL CHANGE STATUS
 
@@ -178,11 +198,11 @@ public class ReportService implements IReportService<ValReportCreateDTO> {
             return GlobalResponse.dataUpdate(request);
 
         } catch (Exception e) {
-            LoggingFile.logException(className, "changeStatus(Long reportId, Long statusId, HttpServletRequest request)", e);
+            LoggingFile.logException(className,
+                    "changeStatus(Long reportId, Long statusId, HttpServletRequest request)", e);
             return GlobalResponse.dataUpdateFailed("IFRSE04", request);
         }
     }
-
 
     // FIND BY PARAM
 
@@ -191,14 +211,13 @@ public class ReportService implements IReportService<ValReportCreateDTO> {
             Pageable pageable,
             String column,
             String value,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         try {
             Page<Report> page;
 
             switch (column) {
                 case "title" ->
-                        page = reportRepo.findByTitleContainsIgnoreCase(pageable, value);
+                    page = reportRepo.findByTitleContainsIgnoreCase(pageable, value);
 
                 case "status" -> {
                     Long statusId;
@@ -211,7 +230,7 @@ public class ReportService implements IReportService<ValReportCreateDTO> {
                 }
 
                 default ->
-                        page = reportRepo.findAllByOrderByCreatedDate(pageable);
+                    page = reportRepo.findAllByOrderByCreatedDate(pageable);
             }
 
             if (page.isEmpty()) {
@@ -223,8 +242,7 @@ public class ReportService implements IReportService<ValReportCreateDTO> {
                     .map(this::toDTO)
                     .toList();
 
-            Map<String, Object> data =
-                    tp.transformPagination(listDTO, page, column, value);
+            Map<String, Object> data = tp.transformPagination(listDTO, page, column, value);
 
             return GlobalResponse.dataFound(data, request);
 
@@ -233,12 +251,10 @@ public class ReportService implements IReportService<ValReportCreateDTO> {
                     className,
                     "findByParam(Pageable pageable, String column, String value, HttpServletRequest request) " +
                             RequestCapture.allRequest(request),
-                    e
-            );
+                    e);
             return GlobalResponse.internalServerError("IFRSE051", request);
         }
     }
-
 
     // REPORT PDF
 
@@ -257,48 +273,47 @@ public class ReportService implements IReportService<ValReportCreateDTO> {
         HtmlConverter.convertToPdf(html, response.getOutputStream(), converterProperties);
     }
 
-
     // HTML FOR PDF
 
     private String buildHtml(Report report) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm");
 
         return String.format("""
-        <html>
-        <head>
-            <style>
-                body { font-family: Arial, sans-serif; margin: 40px; color: #333; }
-                h1 { text-align: center; color: #1a73e8; margin-bottom: 5px; }
-                .subtitle { text-align: center; font-size: 14px; color: #555; margin-bottom: 30px; }
-                table { width: 100%%; border-collapse: collapse; margin-top: 20px; }
-                table, th, td { border: 1px solid #ccc; }
-                th, td { padding: 12px; text-align: left; }
-                th { background-color: #f2f2f2; }
-                .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #777; }
-            </style>
-        </head>
-        <body>
-            <h1>Citizen Report</h1>
-            <div class="subtitle">Report ID: %d</div>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 40px; color: #333; }
+                        h1 { text-align: center; color: #1a73e8; margin-bottom: 5px; }
+                        .subtitle { text-align: center; font-size: 14px; color: #555; margin-bottom: 30px; }
+                        table { width: 100%%; border-collapse: collapse; margin-top: 20px; }
+                        table, th, td { border: 1px solid #ccc; }
+                        th, td { padding: 12px; text-align: left; }
+                        th { background-color: #f2f2f2; }
+                        .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #777; }
+                    </style>
+                </head>
+                <body>
+                    <h1>Citizen Report</h1>
+                    <div class="subtitle">Report ID: %d</div>
 
-            <table>
-                <tr><th>Title</th><td>%s</td></tr>
-                <tr><th>Description</th><td>%s</td></tr>
-                <tr><th>Street</th><td>%s</td></tr>
-                <tr><th>City</th><td>%s</td></tr>
-                <tr><th>Province</th><td>%s</td></tr>
-                <tr><th>Post Code</th><td>%s</td></tr>
-                <tr><th>Status</th><td>%s</td></tr>
-                <tr><th>Created By</th><td>%s</td></tr>
-                <tr><th>Created Date</th><td>%s</td></tr>
-            </table>
+                    <table>
+                        <tr><th>Title</th><td>%s</td></tr>
+                        <tr><th>Description</th><td>%s</td></tr>
+                        <tr><th>Street</th><td>%s</td></tr>
+                        <tr><th>City</th><td>%s</td></tr>
+                        <tr><th>Province</th><td>%s</td></tr>
+                        <tr><th>Post Code</th><td>%s</td></tr>
+                        <tr><th>Status</th><td>%s</td></tr>
+                        <tr><th>Created By</th><td>%s</td></tr>
+                        <tr><th>Created Date</th><td>%s</td></tr>
+                    </table>
 
-            <div class="footer">
-                Generated by InfraFix System &copy; 2025
-            </div>
-        </body>
-        </html>
-        """,
+                    <div class="footer">
+                        Generated by InfraFix System &copy; 2025
+                    </div>
+                </body>
+                </html>
+                """,
                 report.getId(),
                 report.getTitle(),
                 report.getDescription(),
@@ -308,11 +323,8 @@ public class ReportService implements IReportService<ValReportCreateDTO> {
                 report.getPostCode(),
                 report.getStatus().getStatus(),
                 report.getUser().getName(),
-                report.getCreatedDate().format(formatter)
-        );
+                report.getCreatedDate().format(formatter));
     }
-
-
 
     // DTO MAPPING HELPER
 
@@ -330,11 +342,9 @@ public class ReportService implements IReportService<ValReportCreateDTO> {
         dto.setStatus(report.getStatus().getStatus());
         dto.setCreatedDate(report.getCreatedDate());
 
-        ReportResponseDTO.UserSummary userSummary =
-                new ReportResponseDTO.UserSummary(
-                        report.getUser().getId(),
-                        report.getUser().getName()
-                );
+        ReportResponseDTO.UserSummary userSummary = new ReportResponseDTO.UserSummary(
+                report.getUser().getId(),
+                report.getUser().getName());
 
         dto.setCreatedBy(userSummary);
 

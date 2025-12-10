@@ -49,9 +49,6 @@ public class UserService implements IUserService<ValUserCreateDTO, User> {
     private BcryptCustom bcryptCustom;
 
     @Autowired
-    private RoleRepository roleRepo;
-
-    @Autowired
     private JwtContextUtil jwtContextUtil;
 
     @Autowired
@@ -62,7 +59,6 @@ public class UserService implements IUserService<ValUserCreateDTO, User> {
 
     private static final String className = "UserService";
 
-
     // SAVE
 
     @Override
@@ -71,8 +67,13 @@ public class UserService implements IUserService<ValUserCreateDTO, User> {
         if (dto == null) {
             return GlobalResponse.dataCreationFailed("IFUSFV001", request);
         }
+        // Check for duplicate email
+        if (userRepository.existsByEmail(dto.getEmail())) {
+            return GlobalResponse.dataCreationFailed("IFUSFV002", request); // Duplicate Email
+        }
+
         try {
-            Long creatorId = 0L; // 0 = New User
+            long creatorId = 0L; // 0 = New User
 
             User user = new User();
             user.setName(dto.getName());
@@ -86,8 +87,8 @@ public class UserService implements IUserService<ValUserCreateDTO, User> {
             String hashedPassword = bcryptCustom.hash(dto.getPassword());
             user.setPassword(hashedPassword);
 
-            // Always assign CITIZEN role
-            Role citizenRole = roleRepository.findById(1L)
+            // Assign CITIZEN role by name instead of ID
+            Role citizenRole = roleRepository.findByRole("citizen")
                     .orElseThrow(() -> new RuntimeException("Citizen role not found"));
             user.setRole(citizenRole);
 
@@ -102,34 +103,41 @@ public class UserService implements IUserService<ValUserCreateDTO, User> {
             String verificationToken = jwtUtility.doGenerateToken(claims, savedUser.getEmail());
 
             // Send verification email
-            emailService.sendVerificationEmail(savedUser.getEmail(), verificationToken, savedUser.getName());
+            // Note: If email fails, the user is still created. Ideally this should be
+            // handled or async.
+            try {
+                emailService.sendVerificationEmail(savedUser.getEmail(), verificationToken, savedUser.getName());
+            } catch (Exception ex) {
+                LoggingFile.logException(className, "Email service failed for user: " + savedUser.getEmail(), ex);
+                // Continue execution, do not fail registration just because email failed
+                // (optional policy)
+            }
 
             UserResponseDTO userResponseDTO = entityToDTO(savedUser);
             return GlobalResponse.created(userResponseDTO, request);
 
-        } catch (Exception e) {
+        } catch (
+
+        Exception e) {
             LoggingFile.logException(
                     className,
                     "createCitizen(ValUserCreateDTO dto, HttpServletRequest request) " +
                             RequestCapture.allRequest(request),
-                    e
-            );
+                    e);
             return GlobalResponse.dataCreationFailed("IFUSFE001", request);
         }
     }
 
-
-
     // UPDATE
 
     @Override
-    public ResponseEntity<Object> update(Long id, User user, HttpServletRequest request){
-        if(user==null){
+    public ResponseEntity<Object> update(Long id, User user, HttpServletRequest request) {
+        if (user == null) {
             return GlobalResponse.dataUpdateFailed("IFUSFV011", request);
         }
-        try{
+        try {
             Optional<User> optionalUser = userRepository.findById(id);
-            if(optionalUser.isEmpty()){
+            if (optionalUser.isEmpty()) {
                 return GlobalResponse.dataNotFound("IFUSFV041", request);
             }
 
@@ -143,19 +151,19 @@ public class UserService implements IUserService<ValUserCreateDTO, User> {
             nextUser.setPostCode(user.getPostCode());
             nextUser.setModifiedBy(modifierId);
             userRepository.save(nextUser);
-        } catch (Exception e){
-            LoggingFile.logException(className,"update(Long id, User user, HttpServletRequest request) " + RequestCapture.allRequest(request), e);
+        } catch (Exception e) {
+            LoggingFile.logException(className,
+                    "update(Long id, User user, HttpServletRequest request) " + RequestCapture.allRequest(request), e);
             return GlobalResponse.dataUpdateFailed("IFUSFV011", request);
         }
         return GlobalResponse.dataUpdate(request);
     }
 
-
     // DELETE
 
     @Override
-    public ResponseEntity<Object> delete (Long id, HttpServletRequest request){
-        if(id == null){
+    public ResponseEntity<Object> delete(Long id, HttpServletRequest request) {
+        if (id == null) {
             return GlobalResponse.dataNotFound("IFUSFV041", request);
         }
         try {
@@ -164,70 +172,71 @@ public class UserService implements IUserService<ValUserCreateDTO, User> {
                 return GlobalResponse.dataNotFound("IFUSFV041", request);
             }
             userRepository.deleteById(id);
-        } catch (Exception e){
-            LoggingFile.logException(className,"delete(Long id, HttpServletRequest request) " + RequestCapture.allRequest(request), e);
+        } catch (Exception e) {
+            LoggingFile.logException(className,
+                    "delete(Long id, HttpServletRequest request) " + RequestCapture.allRequest(request), e);
             return GlobalResponse.dataNotFound("IFUSFV041", request);
         }
         return GlobalResponse.dataDeletion(request);
     }
 
-
     // FIND BY ID
 
     @Override
-    public ResponseEntity<Object> findById (Long id, HttpServletRequest request){
+    public ResponseEntity<Object> findById(Long id, HttpServletRequest request) {
         User nextUser = null;
         UserResponseDTO userResponseDTO = null;
-        if(id == null){
+        if (id == null) {
             return GlobalResponse.dataNotFound("IFUSFV041", request);
         }
-        try{
+        try {
             Optional<User> optionalUser = userRepository.findById(id);
-            if(optionalUser.isEmpty()){
+            if (optionalUser.isEmpty()) {
                 return GlobalResponse.dataNotFound("IFUSFV041", request);
             }
             nextUser = optionalUser.get();
             userResponseDTO = entityToDTO(nextUser);
-        } catch (Exception e){
-            LoggingFile.logException(className,"findById(Long id, HttpServletRequest request) " + RequestCapture.allRequest(request), e);
+        } catch (Exception e) {
+            LoggingFile.logException(className,
+                    "findById(Long id, HttpServletRequest request) " + RequestCapture.allRequest(request), e);
             return GlobalResponse.dataNotFound("IFUSFV041", request);
         }
         return GlobalResponse.dataFound(userResponseDTO, request);
     }
 
-
     // FIND ALL
 
     @Override
-    public ResponseEntity<Object> findAll (Pageable pageable, HttpServletRequest request){
+    public ResponseEntity<Object> findAll(Pageable pageable, HttpServletRequest request) {
         Page<User> page = null;
         List<UserResponseDTO> listDTO = null;
         Page<UserResponseDTO> pageRespo = null;
         Map<String, Object> data = null;
-        try{
+        try {
             page = userRepository.findAll(pageable);
-            if(page.isEmpty()){
+            if (page.isEmpty()) {
                 return GlobalResponse.dataNotFound("IFUSFV041", request);
             }
             listDTO = entityToDTO(page.getContent());
             data = tp.transformPagination(listDTO, page, "id", "");
-        } catch (Exception e){
-            LoggingFile.logException(className,"findAll(Pageable pageable, HttpServletRequest request) " + RequestCapture.allRequest(request), e);
+        } catch (Exception e) {
+            LoggingFile.logException(className,
+                    "findAll(Pageable pageable, HttpServletRequest request) " + RequestCapture.allRequest(request), e);
             return GlobalResponse.internalServerError("IFUSFE041", request);
         }
         return GlobalResponse.dataFound(data, request);
     }
 
-
     // FIND BY PARAM
 
     @Override
-    public ResponseEntity<Object> findByParam (Pageable pageable, String column, String value, HttpServletRequest request){
+    public ResponseEntity<Object> findByParam(Pageable pageable, String column, String value,
+            HttpServletRequest request) {
         Page<User> page = null;
         List<UserResponseDTO> listDTO = null;
         Page<UserResponseDTO> pageRespo = null;
         Map<String, Object> data = null;
-        try{
+        try {
             page = switch (column) {
                 case "name" -> userRepository.findByNameContainsIgnoreCase(pageable, value);
                 case "email" -> userRepository.findByEmailContainsIgnoreCase(pageable, value);
@@ -235,18 +244,20 @@ public class UserService implements IUserService<ValUserCreateDTO, User> {
                 case "post_code" -> userRepository.findByPostCodeContainsIgnoreCase(pageable, value);
                 default -> userRepository.findAll(pageable);
             };
-            if(page.isEmpty()){
+            if (page.isEmpty()) {
                 return GlobalResponse.dataNotFound("IFUSFV051", request);
             }
             listDTO = entityToDTO(page.getContent());
             data = tp.transformPagination(listDTO, page, column, value);
-        }catch (Exception e){
-            LoggingFile.logException(className, "findByParam(Pageable pageable, String column, String value, HttpServletRequest request) " + RequestCapture.allRequest(request), e);
+        } catch (Exception e) {
+            LoggingFile.logException(className,
+                    "findByParam(Pageable pageable, String column, String value, HttpServletRequest request) "
+                            + RequestCapture.allRequest(request),
+                    e);
             return GlobalResponse.dataNotFound("IFUSFV051", request);
         }
         return GlobalResponse.dataFound(data, request);
     }
-
 
     // CREATE TECHNICIAN
 
@@ -258,15 +269,20 @@ public class UserService implements IUserService<ValUserCreateDTO, User> {
                 return GlobalResponse.dataCreationFailed("IFUSTC001", request);
             }
 
-            Long creatorId = jwtContextUtil.getCurrentUserId(request);
+            Long creatorId = 0L;
+            try {
+                creatorId = jwtContextUtil.getCurrentUserId(request);
+            } catch (Exception e) {
+                // Ignore missing token, use 0L as system
+            }
 
             // Validate duplicate email
             if (userRepository.existsByEmail(dto.getEmail())) {
                 return GlobalResponse.dataCreationFailed("IFUSTC002", request);
             }
 
-            // Get Technician Role
-            Role technicianRole = roleRepo.findByRole("Technician")
+            // Get Technician Role (Use roleRepository)
+            Role technicianRole = roleRepository.findByRole("Technician")
                     .orElseThrow(() -> new RuntimeException("Technician Role missing"));
 
             // Create user
@@ -278,36 +294,35 @@ public class UserService implements IUserService<ValUserCreateDTO, User> {
             user.setAddress(dto.getAddress());
             user.setPostCode(dto.getPostCode());
             user.setRole(technicianRole);
+            user.setIsEmailVerified(true); // Auto-verify
             user.setCreatedBy(creatorId);
 
             User saved = userRepository.save(user);
 
-            // Generate email verification token
+            // Generate Login Token (Auto Login)
             Map<String, Object> claims = new HashMap<>();
-            claims.put("email", saved.getEmail());
+            claims.put("role", saved.getRole().getRole());
             claims.put("userId", saved.getId());
-            claims.put("purpose", "email_verification");
-            String verificationToken = jwtUtility.doGenerateToken(claims, saved.getEmail());
+            String loginToken = jwtUtility.doGenerateToken(claims, saved.getEmail());
 
-            // Send verification email
-            emailService.sendVerificationEmail(saved.getEmail(), verificationToken, saved.getName());
+            // Skip sending verification email
+            // emailService.sendVerificationEmail(saved.getEmail(), verificationToken,
+            // saved.getName());
 
             // Convert to DTO
             UserResponseDTO responseDTO = entityToDTO(saved);
+            responseDTO.setToken(loginToken);
             return GlobalResponse.created(responseDTO, request);
-
 
         } catch (Exception e) {
             LoggingFile.logException(
                     className,
                     "createTechnician(ValUserCreateDTO dto, HttpServletRequest request) "
                             + RequestCapture.allRequest(request),
-                    e
-            );
+                    e);
             return GlobalResponse.dataCreationFailed("IFUSTC999", request);
         }
     }
-
 
     // CREATE ADMIN
 
@@ -364,12 +379,10 @@ public class UserService implements IUserService<ValUserCreateDTO, User> {
                     className,
                     "createAdmin(ValUserCreateDTO dto, HttpServletRequest request) " +
                             RequestCapture.allRequest(request),
-                    e
-            );
+                    e);
             return GlobalResponse.dataCreationFailed("IFUSFE001", request);
         }
     }
-
 
     // DTO
 

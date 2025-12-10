@@ -10,6 +10,15 @@ public class UserResponseDTO {
     private String postCode;
     private java.time.LocalDateTime createdDate;
     private Long createdBy;
+    private String token;
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
 
     public Long getId() {
         return id;

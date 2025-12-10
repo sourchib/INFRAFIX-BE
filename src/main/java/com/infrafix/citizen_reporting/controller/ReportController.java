@@ -28,27 +28,22 @@ public class ReportController {
         this.reportRepo = reportRepo;
     }
 
-
     // CREATE REPORT
 
     @PostMapping("/create")
     @PreAuthorize("hasRole('CITIZEN')")
     public ResponseEntity<Object> create(
             @Valid @RequestBody ValReportCreateDTO dto,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         return reportService.createReport(dto, request);
     }
-
 
     // FIND ALL
 
     @GetMapping("/all")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TECHNICIAN', 'CITIZEN')")
     public ResponseEntity<Object> findAll(HttpServletRequest request) {
         return reportService.getAllReports(request);
     }
-
 
     // FIND BY ID
 
@@ -56,11 +51,20 @@ public class ReportController {
     @PreAuthorize("hasAnyRole('ADMIN', 'TECHNICIAN', 'CITIZEN')")
     public ResponseEntity<Object> findById(
             @PathVariable Long id,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         return reportService.getReportById(id, request);
     }
 
+    // GENERAL STATUS UPDATE
+
+    // DELETE REPORT
+    @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN')")
+    public ResponseEntity<Object> delete(
+            @PathVariable Long id,
+            HttpServletRequest request) {
+        return reportService.deleteReport(id, request);
+    }
 
     // GENERAL STATUS UPDATE
 
@@ -69,11 +73,9 @@ public class ReportController {
     public ResponseEntity<Object> updateStatus(
             @PathVariable Long id,
             @PathVariable Long statusId,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         return reportService.changeStatus(id, statusId, request);
     }
-
 
     // COMPLETE REPORT
 
@@ -81,11 +83,9 @@ public class ReportController {
     @PreAuthorize("hasAnyRole('ADMIN', 'TECHNICIAN')")
     public ResponseEntity<Object> completeReport(
             @PathVariable Long reportId,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         return reportService.changeStatus(reportId, 3L, request);
     }
-
 
     // CANCEL REPORT
 
@@ -93,23 +93,21 @@ public class ReportController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Object> cancelReport(
             @PathVariable Long id,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         return reportService.changeStatus(id, 4L, request);
     }
-
 
     // FIND BY PARAM
 
     @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("/{sort}/{sort_by}/{page}")
     public ResponseEntity<Object> findByParam(@PathVariable String sort,
-                                              @PathVariable("sort_by") String sortBy,
-                                              @PathVariable Integer page,
-                                              @RequestParam String column,
-                                              @RequestParam String value,
-                                              @RequestParam Integer size,
-                                              HttpServletRequest request) {
+            @PathVariable("sort_by") String sortBy,
+            @PathVariable Integer page,
+            @RequestParam String column,
+            @RequestParam String value,
+            @RequestParam Integer size,
+            HttpServletRequest request) {
         Pageable pageable;
         sortBy = sortByColumn(sortBy);
         if (sort.equalsIgnoreCase("asc")) {
@@ -120,7 +118,6 @@ public class ReportController {
         return reportService.findByParam(pageable, column, value, request);
     }
 
-
     // DOWNLOAD PDF
 
     @GetMapping("/download/{reportId}")
@@ -129,7 +126,6 @@ public class ReportController {
                 .orElseThrow(() -> new RuntimeException("Report not found"));
         reportService.generateReportPDF(response, report);
     }
-
 
     private String sortByColumn(String sortBy) {
         return switch (sortBy.toLowerCase()) {

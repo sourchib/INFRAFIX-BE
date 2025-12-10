@@ -25,12 +25,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-
 /**
  * platform code : IF
  * module code : TS
  */
-
 
 @Service
 @Transactional
@@ -42,7 +40,7 @@ public class TechnicianService implements ITechnicianService<Long, Technician, T
     private final StatusRepository statusRepo;
     private final GlobalExceptionHandler globalExceptionHandler;
     private final TransformPagination tp;
-    private final JwtContextUtil  jwtContextUtil;
+    private final JwtContextUtil jwtContextUtil;
 
     public TechnicianService(
             TechnicianRepository technicianRepository,
@@ -51,8 +49,7 @@ public class TechnicianService implements ITechnicianService<Long, Technician, T
             StatusRepository statusRepo,
             GlobalExceptionHandler globalExceptionHandler,
             TransformPagination tp,
-            JwtContextUtil jwtContextUtil
-    ){
+            JwtContextUtil jwtContextUtil) {
         this.technicianRepository = technicianRepository;
         this.reportRepo = reportRepo;
         this.userRepo = userRepo;
@@ -61,7 +58,6 @@ public class TechnicianService implements ITechnicianService<Long, Technician, T
         this.tp = tp;
         this.jwtContextUtil = jwtContextUtil;
     }
-
 
     // ASSIGN TECHNICIAN
 
@@ -85,8 +81,8 @@ public class TechnicianService implements ITechnicianService<Long, Technician, T
                     .orElseThrow(() -> new RuntimeException("Status IN_PROGRESS not found"));
 
             // Close previous technician assignment
-            Technician activeAssignment =
-                    technicianRepository.findByReportIdAndUnassignedAtIsNull(reportId).orElse(null);
+            Technician activeAssignment = technicianRepository.findByReportIdAndUnassignedAtIsNull(reportId)
+                    .orElse(null);
 
             if (activeAssignment != null) {
                 activeAssignment.setUnassignedAt(LocalDateTime.now());
@@ -112,7 +108,6 @@ public class TechnicianService implements ITechnicianService<Long, Technician, T
         }
     }
 
-
     // UNASSIGN TECHNICIAN
 
     @Override
@@ -137,10 +132,9 @@ public class TechnicianService implements ITechnicianService<Long, Technician, T
             return ResponseEntity.ok(GlobalResponse.assignSuccess(request));
 
         } catch (Exception ex) {
-            return globalExceptionHandler.handleAllExceptions(ex, request);
+            return globalExceptionHandler.handleGeneralException(ex, request);
         }
     }
-
 
     // GET ASSIGNMENT BY ID
 
@@ -153,10 +147,9 @@ public class TechnicianService implements ITechnicianService<Long, Technician, T
             return GlobalResponse.dataFound(toDTO(assignment), request);
 
         } catch (Exception e) {
-            return globalExceptionHandler.handleAllExceptions(e, request);
+            return globalExceptionHandler.handleGeneralException(e, request);
         }
     }
-
 
     // FIND ALL
 
@@ -174,8 +167,7 @@ public class TechnicianService implements ITechnicianService<Long, Technician, T
                     .map(this::toDTO)
                     .toList();
 
-            Map<String, Object> data =
-                    tp.transformPagination(listDTO, page, "id", "");
+            Map<String, Object> data = tp.transformPagination(listDTO, page, "id", "");
 
             return GlobalResponse.dataFound(data, request);
 
@@ -195,12 +187,10 @@ public class TechnicianService implements ITechnicianService<Long, Technician, T
         dto.setAssignedAt(assignment.getAssignedAt());
         dto.setUnassignedAt(assignment.getUnassignedAt());
 
-        TechnicianResponseDTO.TechnicianSummary tech =
-                new TechnicianResponseDTO.TechnicianSummary(
-                        assignment.getTechnician().getId(),
-                        assignment.getTechnician().getName(),
-                        assignment.getTechnician().getEmail()
-                );
+        TechnicianResponseDTO.TechnicianSummary tech = new TechnicianResponseDTO.TechnicianSummary(
+                assignment.getTechnician().getId(),
+                assignment.getTechnician().getName(),
+                assignment.getTechnician().getEmail());
 
         dto.setTechnician(tech);
 

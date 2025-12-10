@@ -37,7 +37,9 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, JwtFilter jwtFilter, CorsConfigurationSource corsConfigurationSource, JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, JwtFilter jwtFilter,
+            CorsConfigurationSource corsConfigurationSource, JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint)
+            throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(csrf -> csrf.disable())
@@ -52,8 +54,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/status/init").permitAll()
                         .requestMatchers("/admin/init").permitAll()
                         .requestMatchers("/report/download/*").permitAll()
-                        .anyRequest().authenticated()
-                )
+                        .requestMatchers(HttpMethod.POST, "/adminuser/create-technician").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/report/all").permitAll()
+                        .anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

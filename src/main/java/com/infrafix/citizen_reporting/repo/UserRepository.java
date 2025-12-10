@@ -11,11 +11,18 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // For authentication — exact match
     Optional<User> findByEmail(String email);
+
     boolean existsByEmail(String email);
+
+    // Check for duplicate name and address
+    // Removed to allow duplicates
 
     // For searching
     Page<User> findByNameContainsIgnoreCase(Pageable page, String value);
+
     Page<User> findByAddressContainsIgnoreCase(Pageable page, String value);
+
     Page<User> findByPostCodeContainsIgnoreCase(Pageable page, String value);
+
     Page<User> findByEmailContainsIgnoreCase(Pageable page, String value);
 }

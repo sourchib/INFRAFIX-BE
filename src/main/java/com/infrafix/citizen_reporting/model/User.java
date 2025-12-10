@@ -6,15 +6,12 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
-
 @Entity
-@Table(name="users",
-uniqueConstraints = @UniqueConstraint(name = "idx-combination", columnNames = {"Name","Address"}),
-indexes = @Index(name = "idx_email", columnList = "Email"))
+@Table(name = "users", indexes = @Index(name = "idx_email", columnList = "Email"))
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ID")
+    @Column(name = "ID", nullable = false, updatable = false)
     private Long id;
 
     @Column(name = "name", length = 50, nullable = false)
@@ -35,28 +32,33 @@ public class User {
     @Column(name = "post_code", length = 5, nullable = false, columnDefinition = "CHAR(5)")
     private String postCode;
 
-    @Column(name = "created_by", nullable = true)
-    private Long createdBy;
+    @Column(name = "CreatedBy", nullable = false)
+    private Long createdBy = 0L;
 
-    @Column(name = "created_date", nullable = false, updatable = false)
-    @CreationTimestamp
-    private LocalDateTime createdDate;
+    @Column(name = "created_date", nullable = false)
+    private LocalDateTime createdDate = LocalDateTime.now();
 
-    @Column(name = "modified_by")
-    private Long modifiedBy;
+    @PrePersist
+    protected void onCreate() {
+        if (createdDate == null) {
+            createdDate = LocalDateTime.now();
+        }
+    }
 
-    @Column(name = "modified_date")
+    @Column(name = "modified_by", nullable = false)
+    private Long modifiedBy = 0L;
+
+    @Column(name = "modified_date", nullable = false)
     @UpdateTimestamp
-    private LocalDateTime modifiedDate;
+    private LocalDateTime modifiedDate = LocalDateTime.now();
 
     @Column(name = "is_email_verified", nullable = false)
     private Boolean isEmailVerified = false;
 
     // Relation Many to One (Role)
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "role_id")
+    @JoinColumn(name = "role_id", nullable = false)
     private Role role;
-
 
     // Getter Setter
 

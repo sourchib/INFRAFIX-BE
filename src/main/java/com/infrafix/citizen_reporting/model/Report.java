@@ -13,7 +13,7 @@ public class Report {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "Title", nullable = false, length = 20)
+    @Column(name = "Title", nullable = false, length = 50)
     private String title;
 
     @Column(name = "Description", nullable = false, length = 100)
@@ -31,21 +31,25 @@ public class Report {
     @Column(name = "PostCode", nullable = false, length = 10)
     private String postCode;
 
-
     @Column(name = "CreatedBy", nullable = false, updatable = false)
-    private Long createdBy;
+    private Long createdBy = 0L;
 
     @Column(name = "CreatedDate", nullable = false, updatable = false)
-    @CreationTimestamp
-    private LocalDateTime createdDate;
+    private LocalDateTime createdDate = LocalDateTime.now();
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdDate == null) {
+            createdDate = LocalDateTime.now();
+        }
+    }
 
     @Column(name = "ModifiedBy")
-    private Long modifiedBy;
+    private Long modifiedBy = 0L;
 
     @Column(name = "ModifiedDate")
     @UpdateTimestamp
-    private LocalDateTime modifiedDate;
-
+    private LocalDateTime modifiedDate = LocalDateTime.now();
 
     // Many to One Relation With User
     @ManyToOne(fetch = FetchType.LAZY)
@@ -53,13 +57,11 @@ public class Report {
     @JsonIgnore
     private User user;
 
-
     // Many to One Relation With Status
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "StatusID")
     @JsonIgnore
     private Status status;
-
 
     // Getter Setter
 

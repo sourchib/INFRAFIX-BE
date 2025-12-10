@@ -10,9 +10,16 @@ import java.io.IOException;
 
 public interface IReportService<REQ> {
     ResponseEntity<Object> createReport(REQ req, HttpServletRequest request);
+
     ResponseEntity<Object> getAllReports(HttpServletRequest request);
+
     ResponseEntity<Object> getReportById(Long id, HttpServletRequest request);
+
+    ResponseEntity<Object> deleteReport(Long id, HttpServletRequest request);
+
     ResponseEntity<Object> changeStatus(Long reportId, Long statusId, HttpServletRequest request);
+
     ResponseEntity<Object> findByParam(Pageable pageable, String column, String value, HttpServletRequest request);
+
     void generateReportPDF(HttpServletResponse response, Report report) throws IOException;
 }

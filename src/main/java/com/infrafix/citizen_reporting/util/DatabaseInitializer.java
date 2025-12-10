@@ -23,7 +23,7 @@ public class DatabaseInitializer implements CommandLineRunner {
     private final BcryptCustom bcryptCustom;
 
     public DatabaseInitializer(RoleRepository roleRepository, StatusRepository statusRepository,
-                              UserRepository userRepository, BcryptCustom bcryptCustom) {
+            UserRepository userRepository, BcryptCustom bcryptCustom) {
         this.roleRepository = roleRepository;
         this.statusRepository = statusRepository;
         this.userRepository = userRepository;
@@ -41,7 +41,7 @@ public class DatabaseInitializer implements CommandLineRunner {
         }
         initializeRoles();
         initializeStatuses();
-        // initializeAdmin();
+        initializeAdmin();
     }
 
     private void initializeRoles() {
@@ -49,8 +49,7 @@ public class DatabaseInitializer implements CommandLineRunner {
             List<Role> roles = Arrays.asList(
                     createRole("citizen"),
                     createRole("admin"),
-                    createRole("technician")
-            );
+                    createRole("technician"));
             roleRepository.saveAll(roles);
             System.out.println("Default roles initialized.");
         }
@@ -62,8 +61,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                     createStatus("Pending"),
                     createStatus("In Progress"),
                     createStatus("Completed"),
-                    createStatus("Rejected")
-            );
+                    createStatus("Rejected"));
             statusRepository.saveAll(statuses);
             System.out.println("Default statuses initialized.");
         }
@@ -75,25 +73,25 @@ public class DatabaseInitializer implements CommandLineRunner {
         return role;
     }
 
-    // private void initializeAdmin() {
-    //     if (userRepository.count() == 0) {
-    //         User admin = new User();
-    //         admin.setName("Admin");
-    //         admin.setEmail("admin@example.com");
-    //         admin.setPhoneNumber("08123456789");
-    //         admin.setAddress("System");
-    //         admin.setPostCode("00000");
-    //         admin.setCreatedBy(1L);
-    //         admin.setIsEmailVerified(true);
-    //         admin.setPassword(bcryptCustom.hash("Admin123!"));
-    //         Role role = roleRepository.findByRole("admin")
-    //                 .orElseThrow(() -> new RuntimeException("admin Role Not Found"));
-    //         admin.setRole(role);
+    private void initializeAdmin() {
+        if (userRepository.count() == 0) {
+            User admin = new User();
+            admin.setName("Admin");
+            admin.setEmail("admin@example.com");
+            admin.setPhoneNumber("08123456789");
+            admin.setAddress("System");
+            admin.setPostCode("66182");
+            admin.setCreatedBy(1L);
+            admin.setIsEmailVerified(true);
+            admin.setPassword(bcryptCustom.hash("Admin123!"));
+            Role role = roleRepository.findByRole("admin")
+                    .orElseThrow(() -> new RuntimeException("admin Role Not Found"));
+            admin.setRole(role);
 
-    //         userRepository.save(admin);
-    //         System.out.println("Default admin user initialized.");
-    //     }
-    // }
+            userRepository.save(admin);
+            System.out.println("Default admin user initialized.");
+        }
+    }
 
     private Status createStatus(String name) {
         Status s = new Status();

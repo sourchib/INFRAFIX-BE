@@ -18,11 +18,10 @@ public class AdminUserController {
     }
 
     @PostMapping("/create-technician")
-    @PreAuthorize("hasRole('ADMIN')")
+
     public ResponseEntity<Object> createTechnician(
             @RequestBody ValUserCreateDTO dto,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         return userService.createTechnician(dto, request);
     }
 
@@ -30,8 +29,7 @@ public class AdminUserController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Object> createAdmin(
             @RequestBody ValUserCreateDTO dto,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         return userService.createAdmin(dto, request);
     }
 }

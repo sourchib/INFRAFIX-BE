@@ -21,7 +21,7 @@ public class EmailService {
     @Value("${app.mail.dev-inbox:devinbox@yourdomain.com}")
     private String devInbox;
 
-    @Value("${app.baseurl:http://localhost:8080}")
+    @Value("${app.baseurl:http://103.164.191.212:8082}")
     private String baseUrl;
 
     public EmailService(JavaMailSender mailSender) {
@@ -29,6 +29,11 @@ public class EmailService {
     }
 
     public void sendVerificationEmail(String email, String token, String recipientName) {
+
+        // VALIDASI EMAIL
+        if (!com.infrafix.citizen_reporting.dto.validation.ValEmailValidatorDTO.isValidEmail(email)) {
+            throw new RuntimeException("Email anda belum terdaftar atau tidak valid!");
+        }
 
         try {
             String destination = email;
@@ -46,7 +51,7 @@ public class EmailService {
 
             // Replace placeholders {{name}} {{verificationUrl}}
             html = html.replace("{{recipientName}}", recipientName)
-                       .replace("{{verificationUrl}}", verifyUrl);
+                    .replace("{{verificationUrl}}", verifyUrl);
 
             // Prepare email
             MimeMessage message = mailSender.createMimeMessage();
