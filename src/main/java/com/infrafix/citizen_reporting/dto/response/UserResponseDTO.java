@@ -11,6 +11,15 @@ public class UserResponseDTO {
     private java.time.LocalDateTime createdDate;
     private Long createdBy;
     private String token;
+    private String profilePicture;
+
+    public String getProfilePicture() {
+        return profilePicture;
+    }
+
+    public void setProfilePicture(String profilePicture) {
+        this.profilePicture = profilePicture;
+    }
 
     public String getToken() {
         return token;

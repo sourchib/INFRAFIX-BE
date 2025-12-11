@@ -21,7 +21,7 @@ public class EmailService {
     @Value("${app.mail.dev-inbox:devinbox@yourdomain.com}")
     private String devInbox;
 
-    @Value("${app.baseurl:http://103.164.191.212:8082}")
+    @Value("${app.baseurl:http://localhost:8080}")
     private String baseUrl;
 
     public EmailService(JavaMailSender mailSender) {

@@ -21,13 +21,13 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
-
+import java.net.URI;
+import org.springframework.http.HttpStatus;
 
 /**
  * platform code : IF
  * module code : AS
  */
-
 
 @Service
 public class AuthService implements IAuthService<User> {
@@ -39,14 +39,14 @@ public class AuthService implements IAuthService<User> {
     private final EmailService emailService;
     private static final String className = "AuthService";
 
-    public AuthService(UserRepository userRepository, RoleRepository roleRepository, BcryptCustom bcryptCustom, JwtUtility jwtUtility, EmailService emailService) {
+    public AuthService(UserRepository userRepository, RoleRepository roleRepository, BcryptCustom bcryptCustom,
+            JwtUtility jwtUtility, EmailService emailService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.bcryptCustom = bcryptCustom;
         this.jwtUtility = jwtUtility;
         this.emailService = emailService;
     }
-
 
     // LOGIN
 
@@ -80,6 +80,7 @@ public class AuthService implements IAuthService<User> {
             Map<String, Object> claims = new HashMap<>();
             claims.put("role", user.getRole().getRole());
             claims.put("userId", user.getId());
+            claims.put("isEmailVerified", user.getIsEmailVerified());
 
             String token = jwtUtility.doGenerateToken(claims, user.getEmail());
 
@@ -89,7 +90,7 @@ public class AuthService implements IAuthService<User> {
             data.put("token", token);
             data.put("role", user.getRole().getRole());
             data.put("email", user.getEmail());
-            
+
             return GlobalResponse.dataFound(data, request);
 
         } catch (Exception e) {
@@ -98,7 +99,6 @@ public class AuthService implements IAuthService<User> {
             return GlobalResponse.dataNotFound("IFASE010", request);
         }
     }
-
 
     // LOAD USERNAME
     @Override
@@ -119,7 +119,8 @@ public class AuthService implements IAuthService<User> {
         try {
             // Check if user already exists
             if (userRepository.findByEmail(userCreateDTO.getEmail()).isPresent()) {
-                return GlobalResponse.<UserResponseDTO>badRequest("IFASV030", null); // User with this email already exists
+                return GlobalResponse.<UserResponseDTO>badRequest("IFASV030", null); // User with this email already
+                                                                                     // exists
             }
 
             User user = new User();
@@ -147,11 +148,12 @@ public class AuthService implements IAuthService<User> {
             claims.put("email", savedUser.getEmail());
             claims.put("userId", savedUser.getId());
             claims.put("purpose", "email_verification");
+            claims.put("isEmailVerified", savedUser.getIsEmailVerified());
             String verificationToken = jwtUtility.doGenerateToken(claims, savedUser.getEmail());
 
             // Send verification email
             emailService.sendVerificationEmail(savedUser.getEmail(), verificationToken, savedUser.getName());
-            
+
             // Prepare response data (excluding sensitive info like password)
             UserResponseDTO userResponseDTO = new UserResponseDTO();
             userResponseDTO.setId(savedUser.getId());
@@ -164,7 +166,8 @@ public class AuthService implements IAuthService<User> {
             userResponseDTO.setCreatedDate(savedUser.getCreatedDate());
             userResponseDTO.setCreatedBy(savedUser.getCreatedBy());
 
-            return GlobalResponse.created(userResponseDTO, null); // Use null for HttpServletRequest as it's not needed here
+            return GlobalResponse.created(userResponseDTO, null); // Use null for HttpServletRequest as it's not needed
+                                                                  // here
 
         } catch (Exception e) {
             LoggingFile.logException(className, "register(ValUserCreateDTO userCreateDTO)", e);
@@ -197,16 +200,27 @@ public class AuthService implements IAuthService<User> {
                 return GlobalResponse.badRequest("Invalid token", request);
             }
 
-            // Check if already verified
-            if (user.getIsEmailVerified()) {
-                return GlobalResponse.dataFound("Email already verified", request);
+            // Mark as verified if not already
+            if (!user.getIsEmailVerified()) {
+                user.setIsEmailVerified(true);
+                userRepository.save(user);
             }
 
-            // Mark as verified
-            user.setIsEmailVerified(true);
-            userRepository.save(user);
+            // Generate NEW Access Token
+            Map<String, Object> newClaims = new HashMap<>();
+            newClaims.put("role", user.getRole().getRole());
+            newClaims.put("userId", user.getId());
+            newClaims.put("isEmailVerified", user.getIsEmailVerified());
 
-            return GlobalResponse.dataUpdate(request);
+            String accessToken = jwtUtility.doGenerateToken(newClaims, user.getEmail());
+
+            // Redirect to Frontend
+            String redirectUrl = "https://gentle-meringue-9613a6.netlify.app/verification-success?access_token="
+                    + accessToken;
+
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .location(URI.create(redirectUrl))
+                    .build();
 
         } catch (Exception e) {
             LoggingFile.logException(className, "verifyEmail(String token, HttpServletRequest request)", e);

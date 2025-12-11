@@ -2,7 +2,9 @@ package com.infrafix.citizen_reporting.service;
 
 import com.infrafix.citizen_reporting.core.IUserService;
 import com.infrafix.citizen_reporting.dto.response.UserResponseDTO;
+import com.infrafix.citizen_reporting.dto.response.UserResponseDTO;
 import com.infrafix.citizen_reporting.dto.validation.ValUserCreateDTO;
+import com.infrafix.citizen_reporting.dto.validation.ValUserUpdateDTO;
 import com.infrafix.citizen_reporting.model.Role;
 import com.infrafix.citizen_reporting.model.User;
 import com.infrafix.citizen_reporting.repo.RoleRepository;
@@ -35,7 +37,7 @@ import java.util.Optional;
 
 @Service
 @Transactional
-public class UserService implements IUserService<ValUserCreateDTO, User> {
+public class UserService implements IUserService<ValUserCreateDTO, ValUserUpdateDTO, User> {
     @Autowired
     private UserRepository userRepository;
 
@@ -131,8 +133,8 @@ public class UserService implements IUserService<ValUserCreateDTO, User> {
     // UPDATE
 
     @Override
-    public ResponseEntity<Object> update(Long id, User user, HttpServletRequest request) {
-        if (user == null) {
+    public ResponseEntity<Object> update(Long id, ValUserUpdateDTO dto, HttpServletRequest request) {
+        if (dto == null) {
             return GlobalResponse.dataUpdateFailed("IFUSFV011", request);
         }
         try {
@@ -141,22 +143,44 @@ public class UserService implements IUserService<ValUserCreateDTO, User> {
                 return GlobalResponse.dataNotFound("IFUSFV041", request);
             }
 
+            User nextUser = optionalUser.get();
+
+            // Check if email is being changed and if it conflicts with another user
+            if (!nextUser.getEmail().equals(dto.getEmail()) && userRepository.existsByEmail(dto.getEmail())) {
+                return GlobalResponse.dataCreationFailed("IFUSFV002", request); // Duplicate Email
+            }
+
             Long modifierId = jwtContextUtil.getCurrentUserId(request);
 
-            User nextUser = optionalUser.get();
-            nextUser.setName(user.getName());
-            nextUser.setAddress(user.getAddress());
-            nextUser.setEmail(user.getEmail());
-            nextUser.setPhoneNumber(user.getPhoneNumber());
-            nextUser.setPostCode(user.getPostCode());
+            nextUser.setName(dto.getName());
+            nextUser.setAddress(dto.getAddress());
+
+            // If email changed, we might want to reset verification status
+            if (!nextUser.getEmail().equals(dto.getEmail())) {
+                nextUser.setEmail(dto.getEmail());
+                nextUser.setIsEmailVerified(false);
+                // Ideally send new verification email here
+            }
+
+            nextUser.setPhoneNumber(dto.getPhoneNumber());
+            nextUser.setPostCode(dto.getPostCode());
+
+            if (dto.getImagefoto() != null && !dto.getImagefoto().isEmpty()) {
+                nextUser.setProfilePicture(dto.getImagefoto());
+            }
+
             nextUser.setModifiedBy(modifierId);
             userRepository.save(nextUser);
+
+            return GlobalResponse.dataUpdate(request);
+
         } catch (Exception e) {
             LoggingFile.logException(className,
-                    "update(Long id, User user, HttpServletRequest request) " + RequestCapture.allRequest(request), e);
+                    "update(Long id, ValUserUpdateDTO dto, HttpServletRequest request) "
+                            + RequestCapture.allRequest(request),
+                    e);
             return GlobalResponse.dataUpdateFailed("IFUSFV011", request);
         }
-        return GlobalResponse.dataUpdate(request);
     }
 
     // DELETE
@@ -395,6 +419,7 @@ public class UserService implements IUserService<ValUserCreateDTO, User> {
         dto.setPhoneNumber(user.getPhoneNumber());
         dto.setAddress(user.getAddress());
         dto.setPostCode(user.getPostCode());
+        dto.setProfilePicture(user.getProfilePicture());
 
         // Convert Role entity to String
         if (user.getRole() != null) {
@@ -414,6 +439,7 @@ public class UserService implements IUserService<ValUserCreateDTO, User> {
             dto.setPhoneNumber(u.getPhoneNumber());
             dto.setAddress(u.getAddress());
             dto.setPostCode(u.getPostCode());
+            dto.setProfilePicture(u.getProfilePicture());
 
             if (u.getRole() != null) {
                 dto.setRole(u.getRole().getRole());

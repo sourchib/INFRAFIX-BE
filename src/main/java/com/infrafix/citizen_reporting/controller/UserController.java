@@ -2,6 +2,7 @@ package com.infrafix.citizen_reporting.controller;
 
 import com.infrafix.citizen_reporting.config.OtherConfig;
 import com.infrafix.citizen_reporting.dto.validation.ValUserCreateDTO;
+import com.infrafix.citizen_reporting.dto.validation.ValUserUpdateDTO;
 import com.infrafix.citizen_reporting.model.User;
 import com.infrafix.citizen_reporting.service.UserService;
 import com.infrafix.citizen_reporting.util.GlobalResponse;
@@ -34,8 +35,9 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Object> update(@PathVariable Long id, @RequestBody User user, HttpServletRequest request) {
-        return userService.update(id, user, request);
+    public ResponseEntity<Object> update(@PathVariable Long id, @Valid @RequestBody ValUserUpdateDTO dto,
+            HttpServletRequest request) {
+        return userService.update(id, dto, request);
     }
 
     @DeleteMapping("/{id}")
