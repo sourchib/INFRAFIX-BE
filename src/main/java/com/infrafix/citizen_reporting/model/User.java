@@ -32,9 +32,6 @@ public class User {
     @Column(name = "post_code", length = 5, nullable = false, columnDefinition = "CHAR(5)")
     private String postCode;
 
-    @Column(name = "profile_picture")
-    private String profilePicture;
-
     @Column(name = "CreatedBy", nullable = false)
     private Long createdBy = 0L;
 
@@ -127,14 +124,6 @@ public class User {
 
     public void setPostCode(String postCode) {
         this.postCode = postCode;
-    }
-
-    public String getProfilePicture() {
-        return profilePicture;
-    }
-
-    public void setProfilePicture(String profilePicture) {
-        this.profilePicture = profilePicture;
     }
 
     public Long getCreatedBy() {

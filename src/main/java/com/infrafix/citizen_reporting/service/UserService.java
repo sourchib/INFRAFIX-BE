@@ -2,7 +2,6 @@ package com.infrafix.citizen_reporting.service;
 
 import com.infrafix.citizen_reporting.core.IUserService;
 import com.infrafix.citizen_reporting.dto.response.UserResponseDTO;
-import com.infrafix.citizen_reporting.dto.response.UserResponseDTO;
 import com.infrafix.citizen_reporting.dto.validation.ValUserCreateDTO;
 import com.infrafix.citizen_reporting.dto.validation.ValUserUpdateDTO;
 import com.infrafix.citizen_reporting.model.Role;
@@ -118,9 +117,7 @@ public class UserService implements IUserService<ValUserCreateDTO, ValUserUpdate
             UserResponseDTO userResponseDTO = entityToDTO(savedUser);
             return GlobalResponse.created(userResponseDTO, request);
 
-        } catch (
-
-        Exception e) {
+        } catch (Exception e) {
             LoggingFile.logException(
                     className,
                     "createCitizen(ValUserCreateDTO dto, HttpServletRequest request) " +
@@ -164,10 +161,6 @@ public class UserService implements IUserService<ValUserCreateDTO, ValUserUpdate
 
             nextUser.setPhoneNumber(dto.getPhoneNumber());
             nextUser.setPostCode(dto.getPostCode());
-
-            if (dto.getImagefoto() != null && !dto.getImagefoto().isEmpty()) {
-                nextUser.setProfilePicture(dto.getImagefoto());
-            }
 
             nextUser.setModifiedBy(modifierId);
             userRepository.save(nextUser);
@@ -234,7 +227,6 @@ public class UserService implements IUserService<ValUserCreateDTO, ValUserUpdate
     public ResponseEntity<Object> findAll(Pageable pageable, HttpServletRequest request) {
         Page<User> page = null;
         List<UserResponseDTO> listDTO = null;
-        Page<UserResponseDTO> pageRespo = null;
         Map<String, Object> data = null;
         try {
             page = userRepository.findAll(pageable);
@@ -258,7 +250,6 @@ public class UserService implements IUserService<ValUserCreateDTO, ValUserUpdate
             HttpServletRequest request) {
         Page<User> page = null;
         List<UserResponseDTO> listDTO = null;
-        Page<UserResponseDTO> pageRespo = null;
         Map<String, Object> data = null;
         try {
             page = switch (column) {
@@ -328,10 +319,6 @@ public class UserService implements IUserService<ValUserCreateDTO, ValUserUpdate
             claims.put("role", saved.getRole().getRole());
             claims.put("userId", saved.getId());
             String loginToken = jwtUtility.doGenerateToken(claims, saved.getEmail());
-
-            // Skip sending verification email
-            // emailService.sendVerificationEmail(saved.getEmail(), verificationToken,
-            // saved.getName());
 
             // Convert to DTO
             UserResponseDTO responseDTO = entityToDTO(saved);
@@ -411,6 +398,9 @@ public class UserService implements IUserService<ValUserCreateDTO, ValUserUpdate
     // DTO
 
     public UserResponseDTO entityToDTO(User user) {
+        if (user == null) {
+            return new UserResponseDTO();
+        }
         UserResponseDTO dto = new UserResponseDTO();
 
         dto.setId(user.getId());
@@ -419,7 +409,6 @@ public class UserService implements IUserService<ValUserCreateDTO, ValUserUpdate
         dto.setPhoneNumber(user.getPhoneNumber());
         dto.setAddress(user.getAddress());
         dto.setPostCode(user.getPostCode());
-        dto.setProfilePicture(user.getProfilePicture());
 
         // Convert Role entity to String
         if (user.getRole() != null) {
@@ -430,21 +419,10 @@ public class UserService implements IUserService<ValUserCreateDTO, ValUserUpdate
 
     public List<UserResponseDTO> entityToDTO(List<User> users) {
         List<UserResponseDTO> listUserDTO = new ArrayList<>();
-        for (User u : users) {
-            UserResponseDTO dto = new UserResponseDTO();
-
-            dto.setId(u.getId());
-            dto.setName(u.getName());
-            dto.setEmail(u.getEmail());
-            dto.setPhoneNumber(u.getPhoneNumber());
-            dto.setAddress(u.getAddress());
-            dto.setPostCode(u.getPostCode());
-            dto.setProfilePicture(u.getProfilePicture());
-
-            if (u.getRole() != null) {
-                dto.setRole(u.getRole().getRole());
+        if (users != null) {
+            for (User u : users) {
+                listUserDTO.add(entityToDTO(u));
             }
-            listUserDTO.add(dto);
         }
         return listUserDTO;
     }

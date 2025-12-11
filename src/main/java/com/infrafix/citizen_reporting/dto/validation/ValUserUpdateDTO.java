@@ -27,9 +27,6 @@ public class ValUserUpdateDTO {
     @Pattern(regexp = "^\\d{5}$", message = "Please Enter Valid Postal Code")
     private String postCode;
 
-    @Pattern(regexp = ".*\\.(?i)(png|jpg|jpeg)$", message = "Image must be png, jpg, or jpeg")
-    private String imagefoto;
-
     public String getName() {
         return name;
     }
@@ -68,13 +65,5 @@ public class ValUserUpdateDTO {
 
     public void setPostCode(String postCode) {
         this.postCode = postCode;
-    }
-
-    public String getImagefoto() {
-        return imagefoto;
-    }
-
-    public void setImagefoto(String imagefoto) {
-        this.imagefoto = imagefoto;
     }
 }
