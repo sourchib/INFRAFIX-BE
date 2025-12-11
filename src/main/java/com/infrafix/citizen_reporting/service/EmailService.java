@@ -21,7 +21,7 @@ public class EmailService {
     @Value("${app.mail.dev-inbox:devinbox@yourdomain.com}")
     private String devInbox;
 
-    @Value("${app.baseurl:http://localhost:8080}")
+    @Value("${app.baseurl:https://gentle-meringue-9613a6.netlify.app}")
     private String baseUrl;
 
     public EmailService(JavaMailSender mailSender) {
