@@ -1,13 +1,17 @@
 # Infrafix - Backend Pelaporan Warga
 
 ## Deskripsi
-Proyek ini adalah aplikasi backend untuk sistem pelaporan warga, dibangun dengan Spring Boot. Ini menyediakan API untuk warga melaporkan masalah, administrator mengelola laporan dan pengguna, serta teknisi menangani tugas yang ditugaskan.
+Proyek ini adalah aplikasi backend untuk sistem pelaporan warga, dibangun dengan Spring Boot. Sistem ini menyediakan API yang memungkinkan warga untuk melaporkan masalah infrastruktur atau layanan publik, administrator untuk mengelola laporan dan pengguna, serta teknisi untuk menangani tugas perbaikan yang ditugaskan.
 
 ## Struktur Folder
+Berikut adalah struktur direktori proyek ini:
 
 ```
 .
+├── .dockerignore
+├── .github/
 ├── .gitignore
+├── Dockerfile
 ├── pom.xml
 ├── src/
 │   ├── main/
@@ -15,212 +19,112 @@ Proyek ini adalah aplikasi backend untuk sistem pelaporan warga, dibangun dengan
 │   │   │   └── com/
 │   │   │       └── infrafix/
 │   │   │           └── citizen_reporting/
-│   │   │               ├── Infrafix.java
-│   │   │               ├── config/
-│   │   │               │   ├── JwtConfig.java
-│   │   │               │   └── OtherConfig.java
-│   │   │               ├── controller/
-│   │   │               │   ├── AdminInitController.java
-│   │   │               │   ├── AdminUserController.java
-│   │   │               │   ├── AuthController.java
-│   │   │               │   ├── ReportController.java
-│   │   │               │   ├── RoleInitController.java
-│   │   │               │   ├── StatusInitController.java
-│   │   │               │   ├── TechnicianController.java
-│   │   │               │   └── UserController.java
-│   │   │               ├── core/
-│   │   │               │   ├── IAuthService.java
-│   │   │               │   ├── IReportService.java
-│   │   │               │   ├── ITechnicianService.java
-│   │   │               │   └── IUserService.java
-│   │   │               ├── dto/
-│   │   │               │   ├── request/
-│   │   │               │   │   └── TechnicianRequestDTO.java
-│   │   │               │   │   └── ... (DTO permintaan lainnya)
-│   │   │               │   └── response/
-│   │   │               │       ├── ReportResponseDTO.java
-│   │   │               │       ├── TechnicianResponseDTO.java
-│   │   │               │       └── UserResponseDTO.java
-│   │   │               │       └── ... (DTO respons lainnya)
-│   │   │               ├── dto/validation/
-│   │   │               │   ├── ValReportCreateDTO.java
-│   │   │               │   └── ValUserCreateDTO.java
-│   │   │               ├── handler/
-│   │   │               │   ├── GlobalExceptionHandler.java
-│   │   │               │   └── ResponseHandler.java
-│   │   │               ├── model/
-│   │   │               │   ├── Report.java
-│   │   │               │   ├── Role.java
-│   │   │               │   ├── Status.java
-│   │   │               │   ├── Technician.java
-│   │   │               │   └── User.java
-│   │   │               ├── repo/
-│   │   │               │   ├── ReportRepository.java
-│   │   │               │   ├── RoleRepository.java
-│   │   │               │   ├── StatusRepository.java
-│   │   │               │   ├── TechnicianRepository.java
-│   │   │               │   └── UserRepository.java
-│   │   │               ├── security/
-│   │   │               │   ├── BcryptCustom.java
-│   │   │               │   ├── CustomUserDetails.java
-│   │   │               │   ├── JwtContextUtil.java
-│   │   │               │   ├── JwtFilter.java
-│   │   │               │   ├── JwtUtility.java
-│   │   │               │   ├── MyHttpServletRequestWrapper.java
-│   │   │               │   └── SecurityConfig.java
-│   │   │               ├── service/
-│   │   │               │   ├── AuthService.java
-│   │   │               │   ├── ReportService.java
-│   │   │               │   ├── TechnicianService.java
-│   │   │               │   └── UserService.java
-│   │   │               └── util/
-│   │   │                   ├── GlobalFunction.java
-│   │   │                   ├── GlobalResponse.java
-│   │   │                   ├── LoggingFile.java
-│   │   │                   ├── RequestCapture.java
-│   │   │                   └── TransformPagination.java
+│   │   │               ├── Infrafix.java (Main Application)
+│   │   │               ├── config/ (Konfigurasi Proyek)
+│   │   │               ├── controller/ (Endpoint API)
+│   │   │               ├── core/ (Interface Layanan)
+│   │   │               ├── dto/ (Data Transfer Objects)
+│   │   │               ├── handler/ (Global Exception Handling)
+│   │   │               ├── model/ (Entity Database)
+│   │   │               ├── repo/ (Repository JPA)
+│   │   │               ├── security/ (Konfigurasi Keamanan & JWT)
+│   │   │               ├── service/ (Logika Bisnis)
+│   │   │               └── util/ (Utility & Helper Global)
 │   │   └── resources/
 │   │       ├── application.properties
 │   │       ├── jwt.properties
-│   │       ├── otherconfig.properties
-│   │       ├── static/
-│   │       └── templates/
+│   │       └── otherconfig.properties
 │   └── test/
-│       └── java/
-│           └── com/
-│               └── infrafix/
-│                   └── citizen_reporting/
-│                       └── InfrafixTests.java
 ├── target/
 └── tokens/
 ```
 
-## Detail Teknis API
-API dibangun menggunakan Spring Boot dan mengikuti arsitektur RESTful. Ini berfungsi sebagai backend untuk sistem pelaporan warga, menyediakan berbagai endpoint untuk peran pengguna yang berbeda.
-- **Otentikasi:** Otentikasi berbasis JWT diimplementasikan menggunakan `JwtConfig`, `JwtFilter`, dan `JwtUtility`.
-- **Lapisan Data:** Spring Data JPA digunakan untuk interaksi database, dengan repositori didefinisikan dalam paket `repo`.
-- **Logika Bisnis:** Layanan dalam paket `service` merangkum logika bisnis inti.
-- **Controller:** Endpoint REST didefinisikan dalam paket `controller`.
-- **Penanganan Error:** Penanganan exception global dikelola oleh `GlobalExceptionHandler`.
-- **DTO:** Objek Transfer Data untuk permintaan dan respons terletak dalam paket `dto`.
+## Teknologi yang Digunakan
+*   **Java 17+**
+*   **Spring Boot 3.x** (Web, Data JPA, Security, Validation)
+*   **Database:** MySQL / PostgreSQL (sesuai konfigurasi)
+*   **Keamanan:** Spring Security & JWT (JSON Web Token)
+*   **Build Tool:** Maven
 
-## Endpoint API REST (Backend)
-URL dasar untuk semua endpoint API biasanya `http://localhost:8080` (atau host dan port yang dikonfigurasi). Semua permintaan dan respons diharapkan dalam format JSON.
+## Instalasi dan Menjalankan
 
-### Otentikasi
-- `POST /auth/login`: Masuk pengguna.
-  - **Contoh Body Permintaan:**
-    ```json
-    {
-      "username": "admin@example.com",
-      "password": "Admin123!"
-    }
+1.  **Clone Repository**
+    ```bash
+    git clone https://github.com/username/INFRAFIX-BE.git
+    cd INFRAFIX-BE
     ```
-  - **Respons:** Masuk yang berhasil akan mengembalikan token JWT untuk permintaan yang diautentikasi selanjutnya.
-- `POST /auth/register`: Registrasi pengguna. Endpoint ini memungkinkan pengguna baru membuat akun.
-  - **Contoh Body Permintaan:**
-    ```json
-      {
-        "name": "John Doe",
-        "email": "john.doe@example.com",
-        "password": "Password123!",
-        "phoneNumber": "081234567890",
-        "address": "Jl. Gatot Subroto, Jakarta Selatan",
-        "postCode": "12140"
-     }
+
+2.  **Konfigurasi Database**
+    Sesuaikan pengaturan database di `src/main/resources/application.properties`.
+
+3.  **Build dan Jalankan**
+    ```bash
+    mvn spring-boot:run
     ```
-  - **Respons:** Registrasi yang berhasil biasanya akan mengembalikan pesan sukses atau detail pengguna yang baru dibuat (tidak termasuk informasi sensitif).
 
-### Warga
-- `POST /report/create`: Buat laporan baru (Hanya Warga).
-  - **Contoh Body Permintaan:**
-    ```json
-    {
-      "title": "Lubang Jalan di Main Street",
-      "description": "Ada lubang besar dekat persimpangan Main dan 1st.",
-      "street": "Main Street",
-      "city": "Jakarta",
-      "province": "DKI Jakarta",
-      "postCode": "12140"
-    }
-    ```
-  - **Respons:** Detail laporan yang baru dibuat.
-- `GET /report/all`: Dapatkan semua laporan (Admin, Teknisi, Warga).
-  - **Respons:** Daftar semua laporan.
-- `GET /report/{id}`: Dapatkan laporan spesifik berdasarkan ID (Admin, Teknisi, Warga).
-  - **Variabel Path:** `id` (Long)
-  - **Respons:** Detail laporan spesifik.
-- `GET /report/{sort}/{sort_by}/{page}`: Cari laporan berdasarkan parameter (Hanya Admin).
-  - **Variabel Path:** `sort` (String - "asc" atau "desc"), `sort_by` (String - "title", "created", "updated", "id"), `page` (Integer)
-  - **Parameter Query:** `column` (String), `value` (String), `size` (Integer)
-  - **Respons:** Daftar laporan yang dipaginasi yang cocok dengan kriteria.
-- `GET /report/download/{reportId}`: Unduh laporan sebagai PDF.
-  - **Variabel Path:** `reportId` (Long)
-  - **Respons:** File PDF laporan.
+## Dokumentasi API
 
-### Admin
-- `POST /adminuser/create-technician`: Buat pengguna teknisi baru (Hanya Admin).
-  - **Respons:** Detail pengguna teknisi yang baru dibuat.
-- `POST /adminuser/create-admin`: Buat pengguna admin baru (Hanya Admin).
-  - **Respons:** Detail pengguna admin yang baru dibuat.
-- `GET /admin/users`: Dapatkan semua pengguna
-- `GET /admin/users/{id}`: Dapatkan pengguna spesifik berdasarkan ID
-- `PUT /admin/users/{id}/role`: Perbarui peran pengguna
-- `GET /admin/reports`: Dapatkan semua laporan
-- `PUT /report/{id}/status/{statusId}`: Perbarui status laporan (Hanya Admin).
-  - **Variabel Path:** `id` (Long - ID laporan), `statusId` (Long - ID status baru)
-  - **Respons:** Konfirmasi pembaruan status.
-- `PUT /report/cancel/{id}`: Batal laporan (Hanya Admin).
-  - **Variabel Path:** `id` (Long - ID laporan)
-  - **Respons:** Konfirmasi pembatalan laporan.
-- `PUT /admin/reports/{id}/status`: Perbarui status laporan
-- `PUT /admin/reports/{id}/assign`: Tugaskan laporan ke teknisi
+Base URL: `http://localhost:8080/`
 
-### Teknisi
-- `POST /tech/assign`: Tugaskan laporan ke teknisi.
-  - **Respons:** Konfirmasi penugasan.
-- `POST /tech/unassign/{reportId}`: Batal tugas teknisi dari laporan.
-  - **Variabel Path:** `reportId` (Long)
-  - **Respons:** Konfirmasi pembatalan tugas.
-- `GET /tech/assignment/all`: Dapatkan semua penugasan teknisi (Hanya Admin).
-  - **Parameter Query:** `page`, `size`, `sort` (untuk paginasi)
-  - **Respons:** Daftar semua penugasan yang dipaginasi.
-- `GET /tech/assignment/{id}`: Dapatkan penugasan teknisi spesifik berdasarkan ID (Hanya Admin).
-  - **Variabel Path:** `id` (Long)
-  - **Respons:** Detail penugasan spesifik.
-- `PUT /report/complete/{reportId}`: Selesaikan laporan (Admin, Teknisi).
-  - **Variabel Path:** `reportId` (Long)
-  - **Respons:** Konfirmasi penyelesaian laporan.
-- `GET /technician/reports/assigned`: Dapatkan laporan yang ditugaskan ke teknisi
-- `PUT /technician/reports/{id}/status`: Perbarui status laporan yang ditugaskan
+Berikut adalah daftar endpoint API yang tersedia, dikelompokkan berdasarkan fungsinya.
 
-### API Transaksional
-API ini mewakili operasi inti dan perubahan status dalam sistem pelaporan.
-- `POST /citizen/reports`: Buat laporan baru (operasi transaksional)
-- `PUT /admin/reports/{id}/status`: Perbarui status laporan (operasi transaksional)
-- `PUT /admin/reports/{id}/assign`: Tugaskan laporan ke teknisi (operasi transaksional)
-- `PUT /technician/reports/{id}/status`: Teknisi memperbarui status laporan yang ditugaskan (operasi transaksional)
+### 1. Otentikasi & Inisialisasi
+Endpoint untuk login, registrasi, dan inisialisasi awal sistem.
 
-### Inisialisasi
-- `POST /roles/init`: Inisialisasi peran (misalnya, ADMIN, CITIZEN, TECHNICIAN)
-- `POST /status/init`: Inisialisasi status laporan (misalnya, Pending, In Progress, Completed, Rejected)
-- `POST /admin/init`: Inisialisasi pengguna admin
+| Method | Endpoint             | Deskripsi                                      | Akses       |
+| :----- | :------------------- | :--------------------------------------------- | :---------- |
+| POST   | `/auth/login`        | Masuk ke sistem (mendapatkan token).           | Publik      |
+| POST   | `/auth/register`     | Mendaftar sebagai warga baru.                  | Publik      |
+| GET    | `/auth/verify-email` | Verifikasi email pengguna.                     | Publik      |
+| POST   | `/admin/init`        | Inisialisasi akun Super Admin pertama.         | Publik      |
+| POST   | `/roles/init`        | Inisialisasi Role (Admin, Citizen, Technician).| Publik      |
+| POST   | `/status/init`       | Inisialisasi Status Laporan.                   | Publik      |
 
-## Admin
-Modul admin menyediakan fungsionalitas untuk mengelola sistem.
-- **Manajemen Pengguna:** Admin dapat mengelola akun pengguna (misalnya, buat, perbarui, hapus, tugaskan peran).
-- **Manajemen Laporan:** Admin dapat melihat, memperbarui status, dan menugaskan laporan ke teknisi.
-- **Inisialisasi:** `AdminInitController` dan `RoleInitController` kemungkinan digunakan untuk setup awal pengguna admin dan peran.
+### 2. Manajemen Pengguna
+Endpoint untuk mengelola data pengguna (Warga, Admin, Teknisi).
 
-## Warga
-Modul warga memungkinkan warga berinteraksi dengan sistem pelaporan.
-- **Pengiriman Laporan:** Warga dapat mengirim laporan baru mengenai berbagai masalah.
-- **Pelacakan Laporan:** Warga dapat melihat status dan detail laporan yang mereka kirim.
-- **Otentikasi:** Warga dapat mendaftar dan masuk ke sistem.
+| Method | Endpoint                        | Deskripsi                                   | Akses |
+| :----- | :------------------------------ | :------------------------------------------ | :---- |
+| GET    | `/users`                        | Mendapatkan semua pengguna.                 | Admin |
+| GET    | `/users/{id}`                   | Mendapatkan detail pengguna berdasarkan ID. | Admin |
+| POST   | `/users`                        | Membuat pengguna (Warga) baru.              | Publik|
+| PUT    | `/users/{id}`                   | Memperbarui data pengguna.                  | User  |
+| DELETE | `/users/{id}`                   | Menghapus pengguna.                         | Admin |
+| POST   | `/adminuser/create-technician`  | Membuat akun Teknisi baru.                  | Admin |
+| POST   | `/adminuser/create-admin`       | Membuat akun Admin baru.                    | Admin |
+| GET    | `/users/{sort}/{sort_by}/{page}`| Mencari pengguna dengan filter & pagination.| Admin |
 
-## Inisialisasi
-Proyek ini mencakup beberapa controller inisialisasi dan konfigurasi:
-- `AdminInitController`: Kemungkinan bertanggung jawab untuk membuat pengguna admin awal.
-- `RoleInitController`: Kemungkinan bertanggung jawab untuk mengisi peran awal (misalnya, ADMIN, CITIZEN, TECHNICIAN).
-- `StatusInitController`: Kemungkinan bertanggung jawab untuk mengisi status laporan awal (misalnya, PENDING, IN_PROGRESS, RESOLVED).
-- `application.properties`, `jwt.properties`, `otherconfig.properties`: File konfigurasi untuk database, pengaturan JWT, dan properti spesifik aplikasi lainnya.
+### 3. Manajemen Laporan
+Endpoint untuk membuat, melihat, dan mengelola status laporan warga.
+
+| Method | Endpoint                             | Deskripsi                                      | Akses                      |
+| :----- | :----------------------------------- | :--------------------------------------------- | :------------------------- |
+| POST   | `/report/create`                     | Membuat laporan baru.                          | Warga                      |
+| GET    | `/report/all`                        | Mendapatkan semua laporan.                     | Semua                      |
+| GET    | `/report/{id}`                       | Mendapatkan detail laporan.                    | Semua                      |
+| GET    | `/report/download/{reportId}`        | Mengunduh laporan dalam format PDF.            | Semua                      |
+| PUT    | `/report/{id}/status/{statusId}`     | Memperbarui status laporan secara manual.      | Admin                      |
+| PUT    | `/report/complete/{reportId}`        | Menandai laporan sebagai selesai.              | Admin, Teknisi             |
+| PUT    | `/report/cancel/{id}`                | Membatalkan laporan.                           | Admin                      |
+| DELETE | `/report/delete/{id}`                | Menghapus laporan.                             | Admin                      |
+| GET    | `/report/{sort}/{sort_by}/{page}`    | Mencari laporan dengan filter parameter.       | Admin                      |
+
+### 4. Manajemen Teknisi & Penugasan
+Endpoint khusus untuk operasional teknisi dan penugasan kerja.
+
+| Method | Endpoint                                   | Deskripsi                                      | Akses            |
+| :----- | :----------------------------------------- | :--------------------------------------------- | :--------------- |
+| POST   | `/tech/assign`                             | Menugaskan teknisi ke sebuah laporan.          | Admin            |
+| POST   | `/tech/unassign/{reportId}`                | Membatalkan penugasan teknisi.                 | Admin            |
+| GET    | `/tech/assignment/all`                     | Melihat semua daftar penugasan.                | Admin            |
+| GET    | `/tech/assignment/{id}`                    | Melihat detail penugasan.                      | Admin            |
+| GET    | `/tech/reports/{sort}/{sort_by}/{page}`    | Filter laporan khusus teknisi.                 | Admin, Teknisi   |
+
+## Lisensi
+
+Hak Cipta (c) 2024 Infrafix Team.
+
+Dilisensikan di bawah Lisensi MIT. Lihat file [LICENSE](LICENSE) untuk detail lebih lanjut.
+
+---
+*Dibuat dengan ❤️ oleh Tim Infrafix.*
