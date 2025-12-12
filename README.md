@@ -122,7 +122,7 @@ Endpoint khusus untuk operasional teknisi dan penugasan kerja.
 
 ## Lisensi
 
-Hak Cipta (c) 2024 Infrafix Team.
+Hak Cipta (c) 2025 Infrafix Team.
 
 Dilisensikan di bawah Lisensi MIT. Lihat file [LICENSE](LICENSE) untuk detail lebih lanjut.
 
